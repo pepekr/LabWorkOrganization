@@ -8,7 +8,7 @@ namespace LabWorkOrganization.Domain.Entities
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
-        public string PasswordHash { get; set; }
+        public string SubGoogleId { get; set; }
         public Role Role { get; set; } // e.g., "Student", "Teacher", "Admin"
 
         public ICollection<UserTask> UserTasks { get; set; } = new List<UserTask>();
