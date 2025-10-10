@@ -10,7 +10,7 @@ namespace LabWorkOrganization.Infrastructure.Data
            : base(options)
         {
         }
-        public DbSet<Course> Course { get; set; }
+        public DbSet<Course> Courses { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserTask> UserTasks { get; set; }
         public DbSet<User> Users { get; set; }
