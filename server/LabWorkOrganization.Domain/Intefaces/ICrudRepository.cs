@@ -1,13 +1,12 @@
 namespace LabWorkOrganization.Domain.Intefaces
 {
-    public interface ICrudRepository<TCreational, T>
-        where TCreational : ICreationalDto
-        where T : IFullDto
+    public interface ICrudRepository<TEntity>
+      where TEntity : class
     {
-        public Task<T> CreateAsync(TCreational dto);
-        public Task<T> GetByIdAsync(Guid id);
-        public Task<IEnumerable<T>> GetAllAsync();
-        public Task<T> UpdateAsync(T dto);
-        public Task DeleteAsync(Guid id);
+        public Task<TEntity> AddAsync(TEntity entity);
+        public Task<TEntity?> GetByIdAsync(Guid id);
+        public Task<IEnumerable<TEntity>> GetAllAsync();
+        public void Update(TEntity entity);
+        public void Delete(TEntity entity);
     }
 }
