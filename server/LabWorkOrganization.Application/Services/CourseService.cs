@@ -1,5 +1,6 @@
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
+using LabWorkOrganization.Domain.Utilities;
 
 namespace LabWorkOrganization.Application.Services
 {
@@ -16,7 +17,7 @@ namespace LabWorkOrganization.Application.Services
         }
 
         // TODO: ALL METHODS HERE MUST RETUR RESULT TYPE WITH SUCCESS FLAG AND ERROR MESSAGE IF NEEDED
-        public async Task<Course> CreateCourse(Course course, bool useExternal)
+        public async Task<Result<Course>> CreateCourse(Course course, bool useExternal)
         {
             try
             {
@@ -26,28 +27,32 @@ namespace LabWorkOrganization.Application.Services
                 }
                 await _crudRepository.AddAsync(course);
                 await _unitOfWork.SaveChangesAsync();
-                return course;
+                return Result<Course>.Success(course);
             }
             catch (Exception ex)
             {
 
                 Console.WriteLine($"An error occurred while creating the course: {ex.Message}");
-                throw;
+                return Result<Course>.Failure($"An error occurred while creating the course: {ex.Message}");
             }
         }
-        public async Task<Course?> GetCourseById(Guid id, bool external)
+        public async Task<Result<Course?>> GetCourseById(Guid id, bool external)
         {
             try
             {
                 if (external)
                 {
-                    return await _externalCrudRepository.GetByIdAsync(id);
+                    return Result<Course?>.Success(await _externalCrudRepository.GetByIdAsync(id));
                 }
-                return await _crudRepository.GetByIdAsync(id);
+                return Result<Course?>.Success(await _crudRepository.GetByIdAsync(id));
             }
-            catch (Exception ex) { throw; }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while creating the course: {ex.Message}");
+                return Result<Course?>.Failure($"An error occurred while creating the course: {ex.Message}");
+            }
         }
-        public async Task<IEnumerable<Course>> GetAllCourses(bool isGetExternal)
+        public async Task<Result<IEnumerable<Course>>> GetAllCourses(bool isGetExternal)
         {
             try
             {
@@ -58,11 +63,15 @@ namespace LabWorkOrganization.Application.Services
                     togetherCourses = (courses ?? Enumerable.Empty<Course>())
                        .Concat(await _externalCrudRepository.GetAllAsync() ?? Enumerable.Empty<Course>());
                 }
-                return togetherCourses;
+                return Result<IEnumerable<Course>>.Success(togetherCourses);
             }
-            catch (Exception ex) { throw; }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while creating the course: {ex.Message}");
+                return Result<IEnumerable<Course>>.Failure($"An error occurred while creating the course: {ex.Message}");
+            }
         }
-        public async void UpdateCourse(Course course, bool updateExternal)
+        public async Task<Result<Course>> UpdateCourse(Course course, bool updateExternal)
         {
             try
             {
@@ -72,11 +81,17 @@ namespace LabWorkOrganization.Application.Services
                 }
                 _crudRepository.Update(course);
                 await _unitOfWork.SaveChangesAsync();
+                return Result<Course>.Success(course);
             }
-            catch (Exception ex) { throw; }
+            catch (Exception ex)
+            {
+
+                return Result<Course>.Failure($"An error occurred while updating the course: {ex.Message}");
+
+            }
         }
 
-        public async void DeleteCourse(Guid id)
+        public async Task<Result<Course>> DeleteCourse(Guid id)
         {
             try
             {
@@ -85,11 +100,13 @@ namespace LabWorkOrganization.Application.Services
                 {
                     _crudRepository.Delete(course);
                     await _unitOfWork.SaveChangesAsync();
+                    return Result<Course>.Success(course);
                 }
+                return Result<Course>.Failure("Course not found");
             }
             catch (Exception ex)
             {
-                throw;
+                return Result<Course>.Failure($"An error occurred while updating the course: {ex.Message}");
             }
         }
     }
