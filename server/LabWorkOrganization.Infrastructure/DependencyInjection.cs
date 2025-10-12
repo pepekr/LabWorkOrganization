@@ -1,4 +1,5 @@
-﻿using LabWorkOrganization.Infrastructure.Data;
+using LabWorkOrganization.Infrastructure.Data;
+using LabWorkOrganization.Infrastructure.Mapping;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ namespace LabWorkOrganization.Infrastructure
             {
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
             });
+            services.AddAutoMapper(typeof(ClassroomToDomainProfile).Assembly);
             return services;
         }
     }
