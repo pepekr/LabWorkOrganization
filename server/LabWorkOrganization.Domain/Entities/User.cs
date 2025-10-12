@@ -13,6 +13,7 @@ namespace LabWorkOrganization.Domain.Entities
 
         public ICollection<UserTask> UserTasks { get; set; } = new List<UserTask>();
         public ICollection<SubGroup> SubGroups { get; set; } = new List<SubGroup>();
-
+        public ICollection<ExternalToken> ExternalTokens { get; set; } = new List<ExternalToken>();
     }
+
 }

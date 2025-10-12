@@ -3,6 +3,7 @@ using LabWorkOrganization.Domain.Utilities;
 
 namespace LabWorkOrganization.Application.Services
 {
+    // TODO: all service methods must accept dtos instead of entities
     public class TaskService
     {
         private readonly ICrudRepository<Task> _crudRepository;
