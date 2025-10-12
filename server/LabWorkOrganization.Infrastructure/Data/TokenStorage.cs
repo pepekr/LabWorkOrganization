@@ -1,0 +1,23 @@
+using LabWorkOrganization.Domain.Entities;
+using LabWorkOrganization.Domain.Intefaces;
+
+namespace LabWorkOrganization.Infrastructure.Data
+{
+    public class TokenStorage : ITokenStorage
+    {
+        AppDbContext _context;
+        public TokenStorage(AppDbContext context)
+        {
+            _context = context;
+        }
+        public async Task<ExternalToken?> GetAccessTokenAsync(Guid userId, string apiName)
+        {
+            return await _context.ExternalTokens.FindAsync(userId, apiName);
+
+        }
+        public void SaveToken(ExternalToken token)
+        {
+            _context.ExternalTokens.Update(token);
+        }
+    }
+}
