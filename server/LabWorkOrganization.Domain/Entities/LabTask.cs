@@ -6,7 +6,7 @@ namespace LabWorkOrganization.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public string? ExternalId { get; set; }
+        public Guid? ExternalId { get; set; }
         public string Title { get; set; } = null!;
         public DateTime DueDate { get; set; }
         public bool IsSentRequired { get; set; }
