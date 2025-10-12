@@ -19,5 +19,9 @@ namespace LabWorkOrganization.Infrastructure.Data
         {
             _context.ExternalTokens.Update(token);
         }
+        public void RemoveToken(ExternalToken token)
+        {
+            _context.ExternalTokens.Remove(token);
+        }
     }
 }

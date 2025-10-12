@@ -4,6 +4,7 @@ using LabWorkOrganization.Domain.Utilities;
 
 namespace LabWorkOrganization.Application.Services
 {
+    // TODO: all service methods must accept dtos instead of entities
     public class CourseService
     {
         private readonly ICrudRepository<Course> _crudRepository;
@@ -15,8 +16,6 @@ namespace LabWorkOrganization.Application.Services
             _unitOfWork = IUnitOfWork;
             _externalCrudRepository = IExternalCrudRepository;
         }
-
-        // TODO: ALL METHODS HERE MUST RETUR RESULT TYPE WITH SUCCESS FLAG AND ERROR MESSAGE IF NEEDED
         public async Task<Result<Course>> CreateCourse(Course course, bool useExternal)
         {
             try
