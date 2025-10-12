@@ -2,6 +2,7 @@ using LabWorkOrganization.Application.Dtos;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
+using Microsoft.IdentityModel.Tokens;
 
 namespace LabWorkOrganization.Application.Services
 {
@@ -9,10 +10,12 @@ namespace LabWorkOrganization.Application.Services
     {
         private readonly ITokenStorage _tokenStorage;
         private readonly IUnitOfWork _unitOfWork;
-        public TokenService(ITokenStorage tokenStorage, IUnitOfWork IUnitOfWork)
+        private readonly ITokenValidation _tokenValidation;
+        public TokenService(ITokenStorage tokenStorage, IUnitOfWork IUnitOfWork, ITokenValidation tokenValidation)
         {
             _tokenStorage = tokenStorage;
             _unitOfWork = IUnitOfWork;
+            _tokenValidation = tokenValidation;
         }
 
         public async Task<Result<string>> GetAccessTokenAsync(Guid userId, string apiName)
@@ -34,9 +37,15 @@ namespace LabWorkOrganization.Application.Services
                 {   // TODO:
                     // need to check if expiration is okay,
                     // if not issue new one but with class like tokenIssuer
+                    await _tokenValidation.ValidateTokenAsync(tokenEntity.AccessToken);
                     return Result<string>.Success(tokenEntity.AccessToken);
                 }
                 throw new Exception("Access token was not found");
+            }
+            catch (SecurityTokenException ex)
+            {
+                // token invalid or expired
+                return Result<string>.Failure($"Token invalid: {ex.Message}");
             }
             catch (Exception ex)
             {
@@ -49,10 +58,14 @@ namespace LabWorkOrganization.Application.Services
 
         public async Task<Result<ExternalToken>> SaveTokenAsync(Guid userId, ExternalTokenDto extTokenDto)
         {
-            // TODO: parse before saving
+            Domain.Entities.ExternalToken? tokenEntity = null; // declare here
+
             try
             {
-                var tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, extTokenDto.ApiName);
+                await _tokenValidation.ValidateTokenAsync(extTokenDto.AccessToken);
+                await _tokenValidation.ValidateTokenAsync(extTokenDto.RefreshToken);
+
+                tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, extTokenDto.ApiName);
                 if (tokenEntity is null)
                 {
                     tokenEntity = new Domain.Entities.ExternalToken
@@ -70,15 +83,22 @@ namespace LabWorkOrganization.Application.Services
                     tokenEntity.RefreshToken = extTokenDto.RefreshToken;
                     _tokenStorage.SaveToken(tokenEntity);
                 }
+
                 await _unitOfWork.SaveChangesAsync();
                 return Result<ExternalToken>.Success(tokenEntity);
             }
+            catch (SecurityTokenException ex)
+            {
+                // token invalid or expired
+                return Result<ExternalToken>.Failure($"Token invalid: {ex.Message}");
+            }
             catch (Exception ex)
             {
+                if (tokenEntity != null)
+                    _tokenStorage.RemoveToken(tokenEntity);
 
                 return Result<ExternalToken>.Failure(ex.Message);
             }
-
         }
     }
 }
