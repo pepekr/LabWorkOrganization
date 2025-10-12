@@ -10,6 +10,7 @@ namespace LabWorkOrganization.Infrastructure.Data
            : base(options)
         {
         }
+        public DbSet<ExternalToken> ExternalTokens { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserTask> UserTasks { get; set; }
