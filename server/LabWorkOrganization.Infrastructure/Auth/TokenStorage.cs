@@ -1,7 +1,8 @@
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
+using LabWorkOrganization.Infrastructure.Data;
 
-namespace LabWorkOrganization.Infrastructure.Data
+namespace LabWorkOrganization.Infrastructure.Auth
 {
     public class TokenStorage : ITokenStorage
     {

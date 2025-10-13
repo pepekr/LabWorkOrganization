@@ -3,7 +3,7 @@ using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-namespace LabWorkOrganization.Infrastructure.Data
+namespace LabWorkOrganization.Infrastructure.Auth
 {
     public class GoogleTokenValidation : ITokenValidation
     {
