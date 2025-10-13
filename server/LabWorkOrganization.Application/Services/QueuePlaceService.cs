@@ -11,17 +11,20 @@ namespace LabWorkOrganization.Application.Services
         private readonly ICrudRepository<User> _userRepository;
         private readonly ICrudRepository<SubGroup> _subGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserTaskService _userTaskService;
 
         public QueuePlaceService(
             ICrudRepository<QueuePlace> crudRepository,
             ICrudRepository<User> userRepository,
             ICrudRepository<SubGroup> subGroupRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            UserTaskService userTaskService)
         {
             _crudRepository = crudRepository;
             _userRepository = userRepository;
             _subGroupRepository = subGroupRepository;
             _unitOfWork = unitOfWork;
+            _userTaskService = userTaskService;
         }
 
         public async Task<Result<QueuePlace>> CreateQueuePlace(QueuePlaceCreationalDto dto)
@@ -38,6 +41,15 @@ namespace LabWorkOrganization.Application.Services
                 if (subGroup == null)
                     return Result<QueuePlace>.Failure("SubGroup not found");
 
+                // Check if user completed all tasks in the course
+                var eligibilityResult = await _userTaskService.HasCompletedAllTasks(dto.UserId, dto.SubGroupId);
+                if (!eligibilityResult.IsSuccess)
+                    return Result<QueuePlace>.Failure(eligibilityResult.ErrorMessage ?? "Error during completed tasks check");
+
+                if (eligibilityResult.Data)
+                    return Result<QueuePlace>.Failure("User has already completed all tasks and cannot join the queue");
+
+                // Create queue place
                 var queuePlace = new QueuePlace
                 {
                     Id = Guid.NewGuid(),
@@ -58,6 +70,7 @@ namespace LabWorkOrganization.Application.Services
                 return Result<QueuePlace>.Failure($"An error occurred while creating the queue place: {ex.Message}");
             }
         }
+
 
         public async Task<Result<QueuePlace?>> GetById(Guid id)
         {
