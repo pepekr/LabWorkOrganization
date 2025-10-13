@@ -76,7 +76,10 @@ namespace LabWorkOrganization.Application.Services
             {
                 if (updateExternal)
                 {
-                    await _externalCrudRepository.UpdateAsync(course);
+                    if (course.ExternalId.HasValue)
+                    {
+                        await _externalCrudRepository.UpdateAsync(course, course.ExternalId.Value);
+                    }
                 }
                 _crudRepository.Update(course);
                 await _unitOfWork.SaveChangesAsync();

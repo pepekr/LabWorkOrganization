@@ -6,7 +6,7 @@ namespace LabWorkOrganization.Domain.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public string? ExternalId { get; set; }
+        public Guid? ExternalId { get; set; }
         public string Name { get; set; } = null!;
         public TimeSpan LessonDuration { get; set; }
         public ICollection<User> Teachers { get; set; } = new List<User>();
