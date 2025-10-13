@@ -9,8 +9,6 @@ namespace LabWorkOrganization.Application.Dtos
         [Required]
         public TimeSpan LessonDuration { get; set; }
         [Required]
-        public ICollection<string> TeachersEmails { get; set; } = new List<string>();
-        [Required]
         public DateTime EndOfCourse { get; set; }
     }
 
