@@ -5,11 +5,11 @@ using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos.LabWorkOrganizat
 
 namespace LabWorkOrganization.Infrastructure.Mapping
 {
-    public class ClassroomToDomainProfile : Profile
+    public class ClassroomMappingProfile : Profile
     {
-        public ClassroomToDomainProfile()
+        public ClassroomMappingProfile()
         {
-            // GoogleCourseDto → Course
+
             CreateMap<CourseClassroomDto, Course>()
                 .ForMember(dest => dest.ExternalId,
                     opt => opt.MapFrom(src => ParseGuid(src.Id)))
@@ -18,9 +18,16 @@ namespace LabWorkOrganization.Infrastructure.Mapping
                 .ForMember(dest => dest.EndOfCourse, opt => opt.MapFrom(src => src.UpdateTime.AddMonths(6)))
                 .ForMember(dest => dest.Teachers, opt => opt.Ignore())
                 .ForMember(dest => dest.Tasks, opt => opt.Ignore())
-                .ForMember(dest => dest.SubGroups, opt => opt.Ignore());
+                .ForMember(dest => dest.SubGroups, opt => opt.Ignore())
+                .ReverseMap()
+                .ForMember(dest => dest.Id,
+                    opt => opt.MapFrom(src => src.ExternalId.HasValue ? src.ExternalId.ToString() : null!))
+                .ForMember(dest => dest.UpdateTime,
+                    opt => opt.MapFrom(src => src.EndOfCourse.AddMonths(-6)))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
 
-            // GoogleCourseWorkDto → LabTask
+
+
             CreateMap<LabWorkClassroomDto, LabTask>()
                 .ForMember(dest => dest.ExternalId,
                     opt => opt.MapFrom(src => ParseGuid(src.Id)))
@@ -30,8 +37,28 @@ namespace LabWorkOrganization.Infrastructure.Mapping
                 .ForMember(dest => dest.TimeLimitPerStudent, opt => opt.MapFrom(_ => TimeSpan.FromMinutes(30)))
                 .ForMember(dest => dest.userTasks, opt => opt.Ignore())
                 .ForMember(dest => dest.CourseId, opt => opt.Ignore())
-                .ForMember(dest => dest.Course, opt => opt.Ignore());
+                .ForMember(dest => dest.Course, opt => opt.Ignore())
+                .ReverseMap()
+                .ForMember(dest => dest.Id,
+                    opt => opt.MapFrom(src => src.ExternalId.HasValue ? src.ExternalId.ToString() : null!))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+                .ForMember(dest => dest.CreationTime, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdateTime, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.DueDate, opt => opt.MapFrom(src => new GoogleDateDto
+                {
+                    Year = src.DueDate.Year,
+                    Month = src.DueDate.Month,
+                    Day = src.DueDate.Day
+                }))
+                .ForMember(dest => dest.DueTime, opt => opt.MapFrom(src => new GoogleTimeOfDayDto
+                {
+                    Hours = src.DueDate.Hour,
+                    Minutes = src.DueDate.Minute,
+                    Seconds = src.DueDate.Second,
+                    Nanos = 0
+                }));
         }
+
 
         private static Guid? ParseGuid(string? id)
         {

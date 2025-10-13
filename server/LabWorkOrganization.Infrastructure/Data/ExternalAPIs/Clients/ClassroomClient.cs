@@ -1,3 +1,4 @@
+using AutoMapper;
 using LabWorkOrganization.Domain.Intefaces;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -11,11 +12,13 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
-        public ClassroomClient(string accessToken, HttpClient client, string baseUrl)
+        private readonly IMapper _mapper;
+        public ClassroomClient(string accessToken, HttpClient client, string baseUrl, IMapper mapper)
         {
             _httpClient = client;
             _accessToken = accessToken;
             _baseUrl = baseUrl;
+            _mapper = mapper;
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
             _jsonOptions = new JsonSerializerOptions
             {
