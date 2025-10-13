@@ -1,10 +1,10 @@
+using LabWorkOrganization.Application.Dtos;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
 
 namespace LabWorkOrganization.Application.Services
 {
-    // TODO: all service methods must accept dtos instead of entities
     public class LabTaskService
     {
         private readonly ICrudRepository<LabTask> _crudRepository;
@@ -16,17 +16,31 @@ namespace LabWorkOrganization.Application.Services
             _externalCrudRepository = IExternalCrudRepository;
             _crudRepository = taskRepo;
         }
-        public async Task<Result<LabTask>> CreateTask(LabTask course, bool useExternal)
+        public async Task<Result<LabTask>> CreateTask(LabTaskCreationalDto labTask, bool useExternal)
         {
             try
             {
+                var errors = Validation.ValidationHelper.Validate(labTask);
+                if (errors.Count > 0)
+                {
+                    throw new ArgumentException(string.Join("; ", errors));
+                }
+                var newTask = new LabTask
+                { // NOT ENTERING EXTERNAL ID EXTERNAL API WILL HANDLE IT
+                    Id = Guid.NewGuid(),
+                    Title = labTask.Title,
+                    DueDate = labTask.DueDate,
+                    IsSentRequired = labTask.IsSentRequired,
+                    TimeLimitPerStudent = labTask.TimeLimitPerStudent,
+                    CourseId = labTask.CourseId
+                };
                 if (useExternal)
                 {
-                    await _externalCrudRepository.AddAsync(course);
+                    await _externalCrudRepository.AddAsync(newTask);
                 }
-                await _crudRepository.AddAsync(course);
+                await _crudRepository.AddAsync(newTask);
                 await _unitOfWork.SaveChangesAsync();
-                return Result<LabTask>.Success(course);
+                return Result<LabTask>.Success(newTask);
             }
             catch (Exception ex)
             {
@@ -34,7 +48,7 @@ namespace LabWorkOrganization.Application.Services
                 return Result<LabTask>.Failure($"An error occurred while creating the task: {ex.Message}");
             }
         }
-        public async Task<Result<LabTask?>> GetTaskById(Guid id, bool external)
+        public async Task<Result<LabTask?>> GetTaskById(Guid id, bool external = false)
         {
             try
             {
@@ -50,7 +64,7 @@ namespace LabWorkOrganization.Application.Services
             }
 
         }
-        public async Task<Result<IEnumerable<LabTask>>> GetAllTasks(bool isGetExternal)
+        public async Task<Result<IEnumerable<LabTask>>> GetAllTasks(bool isGetExternal = false)
         {
             try
             {
@@ -67,17 +81,22 @@ namespace LabWorkOrganization.Application.Services
                 return Result<IEnumerable<LabTask>>.Failure($"An error occured while getting the task: ${ex.Message}");
             }
         }
-        public async Task<Result<LabTask>> UpdateTask(LabTask task, bool updateExternal)
+        public async Task<Result<LabTask>> UpdateTask(LabTask labTask, bool updateExternal = false)
         {
             try
             {
-                if (updateExternal && task.ExternalId is not null)
+                var errors = Validation.ValidationHelper.Validate(labTask);
+                if (errors.Count > 0)
                 {
-                    await _externalCrudRepository.UpdateAsync(task, task.ExternalId.Value);
+                    throw new ArgumentException(string.Join("; ", errors));
                 }
-                _crudRepository.Update(task);
+                if (updateExternal && labTask.ExternalId is not null)
+                {
+                    await _externalCrudRepository.UpdateAsync(labTask, labTask.ExternalId.Value);
+                }
+                _crudRepository.Update(labTask);
                 await _unitOfWork.SaveChangesAsync();
-                return Result<LabTask>.Success(task);
+                return Result<LabTask>.Success(labTask);
             }
             catch (Exception ex)
             {
