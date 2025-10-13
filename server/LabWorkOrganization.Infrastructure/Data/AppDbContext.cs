@@ -21,6 +21,11 @@ namespace LabWorkOrganization.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Role>().HasData(
+        new Role { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Student" },
+        new Role { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "Teacher" },
+        new Role { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Admin" }
+    );
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
