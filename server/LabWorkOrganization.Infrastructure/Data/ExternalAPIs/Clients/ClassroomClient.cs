@@ -5,6 +5,9 @@ using System.Text.Json;
 
 namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
 {
+
+
+    /// IMPORTANT: Maybe in adding method, id is not expected so it will give an error -> check and change mapping algorithm if needed
     public class ClassroomClient<TEntity, TResponse> : IExternalCrudRepo<TEntity>
         where TEntity : class
     {
@@ -28,13 +31,12 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
         }
         public async Task<TEntity> AddAsync(TEntity entity)
         {
-            //map to request dto
-            TResponse requestDto = (TResponse)(object)entity;
+            TResponse requestDto = _mapper.Map<TResponse>(entity);
             var result = await _httpClient.PostAsJsonAsync(_baseUrl, requestDto, _jsonOptions);
             result.EnsureSuccessStatusCode();
             var json = await result.Content.ReadAsStringAsync();
             var createdDto = JsonSerializer.Deserialize<TResponse>(json, _jsonOptions)!;
-            return (TEntity)(object)createdDto;
+            return _mapper.Map<TEntity>(createdDto);
         }
 
         public async Task DeleteAsync(Guid externalId)
@@ -49,7 +51,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
             res.EnsureSuccessStatusCode();
             var json = await res.Content.ReadAsStringAsync();
             var temp = JsonSerializer.Deserialize<IEnumerable<TResponse>>(json)!;
-            return (IEnumerable<TEntity>)(object)temp;
+            return _mapper.Map<IEnumerable<TEntity>>(temp);
         }
 
         public async Task<TEntity?> GetByIdAsync(Guid externalId)
@@ -58,12 +60,12 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
             res.EnsureSuccessStatusCode();
             var json = await res.Content.ReadAsStringAsync();
             var temp = JsonSerializer.Deserialize<TResponse>(json)!;
-            return (TEntity)(object)temp;
+            return _mapper.Map<TEntity>(temp);
         }
 
         public async Task<TEntity> UpdateAsync(TEntity entity, Guid externalId)
         {
-            var requestDto = (TResponse)(object)entity;
+            var requestDto = _mapper.Map<TResponse>(entity);
             var result = await _httpClient.PutAsJsonAsync($"{_baseUrl}/{externalId}", requestDto, _jsonOptions);
             result.EnsureSuccessStatusCode();
             return entity;
