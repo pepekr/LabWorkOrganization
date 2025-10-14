@@ -16,6 +16,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
         private readonly string _baseUrl;
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly IMapper _mapper;
+        private readonly IExternalTokenProvider _tokenProvider;
         public ClassroomClient(string accessToken, HttpClient client, string baseUrl, IMapper mapper)
         {
             _httpClient = client;
@@ -29,8 +30,15 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
                 WriteIndented = false
             };
         }
+        private async Task EnsureAuthorizationHeader()
+        {
+            var token = await _tokenProvider.GetAccessTokenAsync();
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
         public async Task<TEntity> AddAsync(TEntity entity)
         {
+            await EnsureAuthorizationHeader();
             TResponse requestDto = _mapper.Map<TResponse>(entity);
             var result = await _httpClient.PostAsJsonAsync(_baseUrl, requestDto, _jsonOptions);
             result.EnsureSuccessStatusCode();
@@ -41,12 +49,14 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
 
         public async Task DeleteAsync(Guid externalId)
         {
+            await EnsureAuthorizationHeader();
             var result = await _httpClient.DeleteAsync($"{_baseUrl}/{externalId}");
             result.EnsureSuccessStatusCode();
         }
 
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
+            await EnsureAuthorizationHeader();
             var res = await _httpClient.GetAsync(_baseUrl);
             res.EnsureSuccessStatusCode();
             var json = await res.Content.ReadAsStringAsync();
@@ -56,6 +66,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
 
         public async Task<TEntity?> GetByIdAsync(Guid externalId)
         {
+            await EnsureAuthorizationHeader();
             var res = await _httpClient.GetAsync($"{_baseUrl}/{externalId}");
             res.EnsureSuccessStatusCode();
             var json = await res.Content.ReadAsStringAsync();
@@ -65,6 +76,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
 
         public async Task<TEntity> UpdateAsync(TEntity entity, Guid externalId)
         {
+            await EnsureAuthorizationHeader();
             var requestDto = _mapper.Map<TResponse>(entity);
             var result = await _httpClient.PutAsJsonAsync($"{_baseUrl}/{externalId}", requestDto, _jsonOptions);
             result.EnsureSuccessStatusCode();
