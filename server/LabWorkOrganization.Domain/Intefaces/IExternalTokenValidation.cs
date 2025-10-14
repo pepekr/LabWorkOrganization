@@ -2,7 +2,7 @@ using System.Security.Claims;
 
 namespace LabWorkOrganization.Domain.Intefaces
 {
-    public interface ITokenValidation
+    public interface IExternalTokenValidation
     {
         public Task<ClaimsPrincipal?> ValidateTokenAsync(string token);
     }

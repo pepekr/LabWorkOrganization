@@ -1,12 +1,13 @@
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
+using LabWorkOrganization.Infrastructure.Data;
 
-namespace LabWorkOrganization.Infrastructure.Data
+namespace LabWorkOrganization.Infrastructure.Auth
 {
-    public class TokenStorage : ITokenStorage
+    public class ExternalTokenStorage : IExternalTokenStorage
     {
         AppDbContext _context;
-        public TokenStorage(AppDbContext context)
+        public ExternalTokenStorage(AppDbContext context)
         {
             _context = context;
         }

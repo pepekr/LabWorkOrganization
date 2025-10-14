@@ -12,6 +12,7 @@ namespace LabWorkOrganization.Domain.Entities
         [ForeignKey(nameof(UserId))]
         public User User { get; set; }
         public string AccessToken { get; set; }
+        public DateTime ExpiresIn { get; set; }
         public string RefreshToken { get; set; }
         public string ApiName { get; set; }
 

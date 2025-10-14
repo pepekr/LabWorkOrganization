@@ -6,19 +6,19 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class TokenService
+    public class ExternalTokenService
     {
-        private readonly ITokenStorage _tokenStorage;
+        private readonly IExternalTokenStorage _tokenStorage;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ITokenValidation _tokenValidation;
-        public TokenService(ITokenStorage tokenStorage, IUnitOfWork IUnitOfWork, ITokenValidation tokenValidation)
+        private readonly IExternalTokenValidation _tokenValidation;
+        public ExternalTokenService(IExternalTokenStorage tokenStorage, IUnitOfWork IUnitOfWork, IExternalTokenValidation tokenValidation)
         {
             _tokenStorage = tokenStorage;
             _unitOfWork = IUnitOfWork;
             _tokenValidation = tokenValidation;
         }
 
-        public async Task<Result<string>> GetAccessTokenAsync(Guid userId, string apiName)
+        public async Task<Result<string>> GetAccessTokenFromDbAsync(Guid userId, string apiName)
         {
             try
             {
@@ -100,5 +100,6 @@ namespace LabWorkOrganization.Application.Services
                 return Result<ExternalToken>.Failure(ex.Message);
             }
         }
+
     }
 }
