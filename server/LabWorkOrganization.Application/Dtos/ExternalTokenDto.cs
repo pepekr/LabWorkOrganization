@@ -10,5 +10,8 @@ namespace LabWorkOrganization.Application.Dtos
         public string RefreshToken { get; set; }
         [Required]
         public string ApiName { get; set; }
+
+        [Required]
+        public DateTime ExpiresIn { get; set; }
     }
 }
