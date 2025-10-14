@@ -2,7 +2,7 @@ using LabWorkOrganization.Domain.Entities;
 
 namespace LabWorkOrganization.Domain.Intefaces
 {
-    public interface ITokenStorage
+    public interface IExternalTokenStorage
     {
         public Task<ExternalToken?> GetAccessTokenAsync(Guid userId, string apiName);
         public void SaveToken(ExternalToken token);
