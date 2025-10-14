@@ -1,9 +1,10 @@
 
+using LabWorkOrganization.Domain.Intefaces;
 using System.ComponentModel.DataAnnotations;
 
 namespace LabWorkOrganization.Domain.Entities
 {
-    public class QueuePlace
+    public class QueuePlace : IHasSubroupId
     {
         [Key]
         public Guid Id { get; set; }
