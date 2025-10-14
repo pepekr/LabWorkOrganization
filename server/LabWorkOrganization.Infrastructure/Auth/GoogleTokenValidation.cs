@@ -5,7 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 namespace LabWorkOrganization.Infrastructure.Auth
 {
-    public class GoogleTokenValidation : ITokenValidation
+    public class GoogleTokenValidation : IExternalTokenValidation
     {
         private readonly JWKSClient _jwksClient;
         public GoogleTokenValidation(JWKSClient jwksClient)
