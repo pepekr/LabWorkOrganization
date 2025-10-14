@@ -6,12 +6,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class TokenService
+    public class ExternalTokenService
     {
-        private readonly ITokenStorage _tokenStorage;
+        private readonly IExternalTokenStorage _tokenStorage;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITokenValidation _tokenValidation;
-        public TokenService(ITokenStorage tokenStorage, IUnitOfWork IUnitOfWork, ITokenValidation tokenValidation)
+        public ExternalTokenService(IExternalTokenStorage tokenStorage, IUnitOfWork IUnitOfWork, ITokenValidation tokenValidation)
         {
             _tokenStorage = tokenStorage;
             _unitOfWork = IUnitOfWork;
