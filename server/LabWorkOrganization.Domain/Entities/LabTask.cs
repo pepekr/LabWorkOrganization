@@ -1,8 +1,9 @@
+using LabWorkOrganization.Domain.Intefaces;
 using System.ComponentModel.DataAnnotations;
 
 namespace LabWorkOrganization.Domain.Entities
 {
-    public class LabTask
+    public class LabTask : IHasCourseId
     {
         [Key]
         public Guid Id { get; set; }

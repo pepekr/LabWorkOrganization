@@ -7,10 +7,10 @@ namespace LabWorkOrganization.Application.Services
 {
     public class LabTaskService
     {
-        private readonly ICrudRepository<LabTask> _crudRepository;
+        private readonly ICourseScopedRepository<LabTask> _crudRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IExternalCrudRepo<LabTask> _externalCrudRepository;
-        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepo<LabTask> IExternalCrudRepository, ICrudRepository<LabTask> taskRepo)
+        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepo<LabTask> IExternalCrudRepository, ICourseScopedRepository<LabTask> taskRepo)
         {
             _unitOfWork = IUnitOfWork;
             _externalCrudRepository = IExternalCrudRepository;

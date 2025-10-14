@@ -1,10 +1,11 @@
 
 
+using LabWorkOrganization.Domain.Intefaces;
 using System.ComponentModel.DataAnnotations;
 
 namespace LabWorkOrganization.Domain.Entities
 {
-    public class SubGroup
+    public class SubGroup : IHasCourseId
     {
         [Key]
         public Guid Id { get; set; }
