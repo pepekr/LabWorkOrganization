@@ -7,7 +7,7 @@ public class GenericRepo<TEntity> : ICrudRepository<TEntity>
     where TEntity : class
 {
     private readonly AppDbContext _context;
-    private readonly DbSet<TEntity> _dbSet;
+    protected readonly DbSet<TEntity> _dbSet;
 
     public GenericRepo(AppDbContext context)
     {
