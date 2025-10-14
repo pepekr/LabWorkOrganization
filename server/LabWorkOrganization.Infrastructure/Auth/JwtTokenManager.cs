@@ -1,3 +1,4 @@
+using LabWorkOrganization.Domain.Intefaces;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,10 +7,10 @@ using System.Text;
 
 namespace LabWorkOrganization.Infrastructure.Auth
 {
-    public class JwtTokenManager
+    public class JwtTokenManager : IJwtTokenManager
     {
         public JwtTokenManager() { }
-        public string GenerateJwtToken(string email, string id, string? eternalServiceId)
+        public string GenerateJwtToken(string email, string id, string? externalServiceId, int expirationInMinutes)
         {
             string secretKey = Environment.GetEnvironmentVariable("JWT_SECRET")!;
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -20,9 +21,9 @@ namespace LabWorkOrganization.Infrastructure.Auth
                 {
                     new System.Security.Claims.Claim("email", email),
                     new System.Security.Claims.Claim("id", id),
-                    new System.Security.Claims.Claim("externalId", eternalServiceId ?? string.Empty)
+                    new System.Security.Claims.Claim("externalId", externalServiceId ?? string.Empty)
                 }),
-                Expires = DateTime.UtcNow.AddHours(1),
+                Expires = DateTime.UtcNow.AddMinutes(expirationInMinutes),
                 SigningCredentials = credentials,
                 Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
                 Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
