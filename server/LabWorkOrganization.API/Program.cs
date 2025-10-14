@@ -27,7 +27,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = System.TimeSpan.Zero
 
         };
-    });
+    }).AddCookie();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
