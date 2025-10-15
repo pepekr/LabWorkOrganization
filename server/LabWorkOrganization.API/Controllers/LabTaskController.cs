@@ -20,9 +20,9 @@ namespace LabWorkOrganization.API.Controllers
             }
 
             [HttpGet("/getAll")]
-            public async Task<IActionResult> GetAllTask()
+            public async Task<IActionResult> GetAllTaskByCourseId([FromRoute] Guid courseId)
             {
-                var result = await _labTaskService.GetAllTasks();
+                var result = await _labTaskService.GetAllTasksByCourseId(courseId);
                 if (!result.IsSuccess)
                 {
                     return BadRequest(result.ErrorMessage);
