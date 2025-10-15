@@ -9,8 +9,8 @@ namespace LabWorkOrganization.Application.Services
     {
         private readonly ICourseScopedRepository<LabTask> _crudRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IExternalCrudRepo<LabTask> _externalCrudRepository;
-        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepo<LabTask> IExternalCrudRepository, ICourseScopedRepository<LabTask> taskRepo)
+        private readonly ICourseScopedExternalRepository<LabTask> _externalCrudRepository;
+        public LabTaskService(IUnitOfWork IUnitOfWork, ICourseScopedExternalRepository<LabTask> IExternalCrudRepository, ICourseScopedRepository<LabTask> taskRepo)
         {
             _unitOfWork = IUnitOfWork;
             _externalCrudRepository = IExternalCrudRepository;
@@ -61,6 +61,23 @@ namespace LabWorkOrganization.Application.Services
             catch (Exception ex)
             {
                 return Result<LabTask?>.Failure($"An error occurred while getting the task: {ex.Message}");
+            }
+
+        }
+
+        public async Task<Result<IEnumerable<LabTask>>> GetAllTasksByCourseId(Guid courseId, bool external = false)
+        {
+            try
+            {
+                if (external)
+                {
+                    return Result<IEnumerable<LabTask>>.Success(await _externalCrudRepository.GetAllByCourseIdAsync(courseId));
+                }
+                return Result<IEnumerable<LabTask>>.Success(await _crudRepository.GetAllByCourseIdAsync(courseId));
+            }
+            catch (Exception ex)
+            {
+                return Result<IEnumerable<LabTask>>.Failure($"An error occurred while getting the task: {ex.Message}");
             }
 
         }
