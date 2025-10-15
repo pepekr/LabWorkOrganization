@@ -11,12 +11,12 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
     public class ClassroomClient<TEntity, TResponse> : IExternalCrudRepo<TEntity>
         where TEntity : class
     {
-        private readonly string _accessToken;
-        private readonly HttpClient _httpClient;
-        private readonly string _baseUrl;
-        private readonly JsonSerializerOptions _jsonOptions;
-        private readonly IMapper _mapper;
-        private readonly IExternalTokenProvider _tokenProvider;
+        protected readonly string _accessToken;
+        protected readonly HttpClient _httpClient;
+        protected readonly string _baseUrl;
+        protected readonly JsonSerializerOptions _jsonOptions;
+        protected readonly IMapper _mapper;
+        protected readonly IExternalTokenProvider _tokenProvider;
         public ClassroomClient(string accessToken, HttpClient client, string baseUrl, IMapper mapper)
         {
             _httpClient = client;
@@ -30,7 +30,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
                 WriteIndented = false
             };
         }
-        private async Task EnsureAuthorizationHeader()
+        protected async Task EnsureAuthorizationHeader()
         {
             var token = await _tokenProvider.GetAccessTokenAsync();
             _httpClient.DefaultRequestHeaders.Authorization =
