@@ -22,6 +22,10 @@ namespace LabWorkOrganization.Application.Services
             _httpContextAccessor = ctx;
             _currentUserId = _httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value;
         }
+        public string? GetCurrentUserId()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value;
+        }
         public async Task<Result<User?>> GetUserByEmail(string email)
         {
             try
