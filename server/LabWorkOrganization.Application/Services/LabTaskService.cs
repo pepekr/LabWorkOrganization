@@ -10,16 +10,33 @@ namespace LabWorkOrganization.Application.Services
         private readonly ICourseScopedRepository<LabTask> _crudRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICourseScopedExternalRepository<LabTask> _externalCrudRepository;
-        public LabTaskService(IUnitOfWork IUnitOfWork, ICourseScopedExternalRepository<LabTask> IExternalCrudRepository, ICourseScopedRepository<LabTask> taskRepo)
+        private readonly UserService _userService;
+        private readonly CourseService _courseService;
+        public LabTaskService(IUnitOfWork IUnitOfWork, ICourseScopedExternalRepository<LabTask> IExternalCrudRepository, ICourseScopedRepository<LabTask> taskRepo, CourseService courseService)
         {
             _unitOfWork = IUnitOfWork;
             _externalCrudRepository = IExternalCrudRepository;
             _crudRepository = taskRepo;
+            _courseService = courseService;
+        }
+        private async Task IsCurrentUserOwnerOfCourse(Guid courseId)
+        {
+            var currentUserId = _userService.GetCurrentUserId();
+            var course = await _courseService.GetCourseById(courseId);
+            if (!course.IsSuccess)
+            {
+                throw new ArgumentException(course.ErrorMessage);
+            }
+            if (course.Data?.OwnerId.ToString() != currentUserId)
+            {
+                throw new UnauthorizedAccessException("User not authorized to perform this action");
+            };
         }
         public async Task<Result<LabTask>> CreateTask(LabTaskCreationalDto labTask, bool useExternal)
         {
             try
             {
+                await IsCurrentUserOwnerOfCourse(labTask.CourseId);
                 var errors = Validation.ValidationHelper.Validate(labTask);
                 if (errors.Count > 0)
                 {
@@ -102,6 +119,7 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
+                await IsCurrentUserOwnerOfCourse(labTask.CourseId);
                 var errors = Validation.ValidationHelper.Validate(labTask);
                 if (errors.Count > 0)
                 {
@@ -125,12 +143,12 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-
                 var task = await _crudRepository.GetByIdAsync(id);
                 if (task is null)
                 {
                     throw new Exception("Task not found");
                 }
+                await IsCurrentUserOwnerOfCourse(task.CourseId);
                 if (deleteExternal && task.ExternalId is not null)
                 {
                     await _externalCrudRepository.DeleteAsync(task.ExternalId.Value);
