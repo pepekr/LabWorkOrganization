@@ -1,22 +1,25 @@
 using LabWorkOrganization.Application.Dtos;
+using LabWorkOrganization.Application.Dtos.SubGroupDtos;
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class SubgroupService
+    public class SubgroupService : ISubgroupService
     {
         private readonly ICourseScopedRepository<SubGroup> _crudRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserService _userService;
-        private readonly CourseService _courseService;
+        private readonly IUserService _userService;
+        private readonly ICourseService _courseService;
         private readonly ICrudRepository<QueuePlace> _queuePlaceRepo;
-        public SubgroupService(ICourseScopedRepository<SubGroup> crudRepository, IUnitOfWork IUnitOfWork, ICrudRepository<QueuePlace> IQueuePlaceRepo)
+        public SubgroupService(ICourseScopedRepository<SubGroup> crudRepository, IUnitOfWork IUnitOfWork, ICrudRepository<QueuePlace> IQueuePlaceRepo, IUserService userService)
         {
             _crudRepository = crudRepository;
             _unitOfWork = IUnitOfWork;
             _queuePlaceRepo = IQueuePlaceRepo;
+            _userService = userService;
         }
         // IDEALLY MOVE THIS FUNC OUT TO USER SERVICE OR SOMETHING ELSE BUT DONT CARE FOR NOW
         private async Task IsCurrentUserOwnerOfCourse(Guid courseId)

@@ -1,4 +1,5 @@
 using LabWorkOrganization.Application.Dtos;
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
@@ -6,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class ExternalTokenService
+    public class ExternalTokenService : IExternalTokenService
     {
         private readonly IExternalTokenStorage _tokenStorage;
         private readonly IUnitOfWork _unitOfWork;

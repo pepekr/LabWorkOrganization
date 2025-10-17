@@ -1,21 +1,24 @@
-using LabWorkOrganization.Application.Dtos;
+using LabWorkOrganization.Application.Dtos.CourseDtos;
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class CourseService
+    public class CourseService : ICourseService
     {
         private readonly ICrudRepository<Course> _crudRepository;
         //private readonly IExternalCrudRepo<Course> _externalCrudRepository;
         private readonly IExternalCrudRepoFactory _externalCrudFactory;
+        private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
-        public CourseService(ICrudRepository<Course> crudRepository, IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory)
+        public CourseService(ICrudRepository<Course> crudRepository, IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, IUserService userService)
         {
             _crudRepository = crudRepository;
             _unitOfWork = IUnitOfWork;
             _externalCrudFactory = IExternalCrudFactory;
+            _userService = userService;
         }
         public async Task<Result<Course>> CreateCourse(CourseCreationalDto course, bool useExternal)
         {
@@ -26,11 +29,12 @@ namespace LabWorkOrganization.Application.Services
                 {
                     throw new ArgumentException(string.Join("; ", errors));
                 }
+                var userId = Guid.Parse(_userService.GetCurrentUserId());
 
                 var newCourse = new Course
                 { // NOT ENTERING EXTERNAL ID EXTERNAL API WILL HANDLE IT
                     Id = Guid.NewGuid(),
-                    OwnerId = Guid.Empty, // NEED TO IMPLEMENT AUTHORIZATION
+                    OwnerId = userId, // NEED TO IMPLEMENT AUTHORIZATION
                     Name = course.Name,
                     LessonDuration = course.LessonDuration,
                     EndOfCourse = course.EndOfCourse

@@ -2,6 +2,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
 using LabWorkOrganization.Application.Dtos;
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
@@ -10,14 +11,14 @@ using System.Security.Claims;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class ExternalAuthService
+    public class ExternalAuthService : IExternalAuthService
     {
         private readonly IExternalTokenStorage _externalTokenStorage;
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly string _currentUserId;
         private readonly string _currentUserEmail;
-        public ExternalAuthService(IExternalTokenStorage externalTokenStorage, UserService userService, IUnitOfWork unitOfWork, IHttpContextAccessor ctx)
+        public ExternalAuthService(IExternalTokenStorage externalTokenStorage, IUserService userService, IUnitOfWork unitOfWork, IHttpContextAccessor ctx)
         {
             _externalTokenStorage = externalTokenStorage;
             _userService = userService;

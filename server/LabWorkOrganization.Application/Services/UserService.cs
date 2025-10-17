@@ -1,4 +1,5 @@
-using LabWorkOrganization.Application.Dtos;
+using LabWorkOrganization.Application.Dtos.UserDtos;
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
@@ -8,18 +9,19 @@ using Microsoft.AspNetCore.Http;
 namespace LabWorkOrganization.Application.Services
 {
 
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly ICrudRepository<User> _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IUnitOfWork _unitOfWork;
         private IHttpContextAccessor _httpContextAccessor;
         private string? _currentUserId;
-        public UserService(ICrudRepository<User> userRepo, IPasswordHasher passwordHasher, IHttpContextAccessor ctx)
+        public UserService(ICrudRepository<User> userRepo, IPasswordHasher passwordHasher, IHttpContextAccessor ctx, IUnitOfWork unitOfWork)
         {
             _userRepository = userRepo;
             _passwordHasher = passwordHasher;
             _httpContextAccessor = ctx;
+            _unitOfWork = unitOfWork;
             _currentUserId = _httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value;
         }
         public string GetCurrentUserId()
@@ -90,6 +92,8 @@ namespace LabWorkOrganization.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     Email = user.Email,
+                    Name = user.Name,
+
                     HashedPassword = _passwordHasher.HashPassword(user.Password)
                 };
                 await _userRepository.AddAsync(newUser);
@@ -134,7 +138,7 @@ namespace LabWorkOrganization.Application.Services
                 }
                 else { return Result<User>.Failure("You can update only your own profile"); }
             }
-            catch (Exception ex) { return Result<User>.Failure("An error occurred while deleting the user: {ex.Message}"); }
+            catch (Exception ex) { return Result<User>.Failure($"An error occurred while deleting the user: {ex.Message}"); }
 
         }
     }

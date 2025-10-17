@@ -1,23 +1,25 @@
-using LabWorkOrganization.Application.Dtos;
+using LabWorkOrganization.Application.Dtos.LabTaskDtos;
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class LabTaskService
+    public class LabTaskService : ILabTaskService
     {
         private readonly ICourseScopedRepository<LabTask> _crudRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IExternalCrudRepoFactory _externalCrudFactory;
-        private readonly UserService _userService;
-        private readonly CourseService _courseService;
-        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, ICourseScopedRepository<LabTask> taskRepo, CourseService courseService)
+        private readonly IUserService _userService;
+        private readonly ICourseService _courseService;
+        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, ICourseScopedRepository<LabTask> taskRepo, ICourseService courseService, IUserService userService)
         {
             _unitOfWork = IUnitOfWork;
             _externalCrudFactory = IExternalCrudFactory;
             _crudRepository = taskRepo;
             _courseService = courseService;
+            _userService = userService;
         }
         private async Task IsCurrentUserOwnerOfCourse(Guid courseId)
         {

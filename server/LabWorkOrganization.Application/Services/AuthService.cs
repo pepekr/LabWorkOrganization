@@ -1,21 +1,26 @@
 using LabWorkOrganization.Application.Dtos;
+using LabWorkOrganization.Application.Dtos.UserDtos;
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
 using Microsoft.AspNetCore.Http;
 
 namespace LabWorkOrganization.Application.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private string? _currentUserId;
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
         private readonly IJwtTokenManager _tokenManager;
         private readonly IPasswordHasher _passwordHasher;
 
 
-        public AuthService(IHttpContextAccessor ctx)
+        public AuthService(IHttpContextAccessor ctx, IUserService userService, IJwtTokenManager jwtTokenManager, IPasswordHasher passwordHasher)
         {
             _currentUserId = ctx.HttpContext?.User?.FindFirst("id")?.Value;
+            _userService = userService;
+            _tokenManager = jwtTokenManager;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<Result<JWTTokenDto>> HandleLogin(UserLoginDto user)
@@ -25,10 +30,10 @@ namespace LabWorkOrganization.Application.Services
                 var userDbResult = await _userService.GetUserByEmail(user.Email);
                 if (!userDbResult.IsSuccess) throw new Exception(userDbResult.ErrorMessage);
                 if (userDbResult.Data is null) throw new Exception("User not found");
-                var res = _passwordHasher.VerifyPassword(user.Password, userDbResult.Data.Id.ToString());
+                var res = _passwordHasher.VerifyPassword(user.Password, userDbResult.Data.HashedPassword.ToString());
                 if (!res) throw new Exception("Invalid password");
-                var access = _tokenManager.GenerateJwtToken(userDbResult.Data.Email, userDbResult.Data.Id.ToString(), userDbResult.Data.SubGoogleId.ToString(), 60);
-                var refresh = _tokenManager.GenerateJwtToken(userDbResult.Data.Email, userDbResult.Data.Id.ToString(), userDbResult.Data.SubGoogleId.ToString(), 1440);
+                var access = _tokenManager.GenerateJwtToken(userDbResult.Data.Email, userDbResult.Data.Id.ToString(), userDbResult.Data.SubGoogleId?.ToString(), 60);
+                var refresh = _tokenManager.GenerateJwtToken(userDbResult.Data.Email, userDbResult.Data.Id.ToString(), userDbResult.Data.SubGoogleId?.ToString(), 1440);
                 return Result<JWTTokenDto>.Success(
 
                     new JWTTokenDto
@@ -74,11 +79,18 @@ namespace LabWorkOrganization.Application.Services
 
         public async Task<Result<JWTTokenDto>> HandleRegistration(UserRegisterDto user)
         {
-            var userDbResult = await _userService.GetUserByEmail(user.Email);
-            if (userDbResult.IsSuccess) throw new Exception("User with this email exists already");
-            var addUserResult = await _userService.AddUser(user);
-            if (!addUserResult.IsSuccess) throw new Exception(addUserResult.ErrorMessage);
-            return await HandleLogin(new UserLoginDto { Email = user.Email, Password = user.Password });
+            try
+            {
+                var userDbResult = await _userService.GetUserByEmail(user.Email);
+                if (userDbResult.IsSuccess) throw new Exception("User with this email exists already");
+                var addUserResult = await _userService.AddUser(user);
+                if (!addUserResult.IsSuccess) throw new Exception(addUserResult.ErrorMessage);
+                return await HandleLogin(new UserLoginDto { Email = user.Email, Password = user.Password });
+            }
+            catch (Exception ex)
+            {
+                return Result<JWTTokenDto>.Failure($"An error occured during registration: {ex.Message}");
+            }
         }
     }
 }
