@@ -3,6 +3,17 @@ using LabWorkOrganization.API;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddHttpClient<LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients.JWKSClient>();
+
+// You can optionally configure the base address here to make the client code cleaner,
+// although your current client code provides the full URL.
+
+builder.Services.AddHttpClient<LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients.JWKSClient>(client =>
+{
+    client.BaseAddress = new Uri("https://www.googleapis.com/oauth2/v3/");
+});
 
 // Add services to the container.
 builder.Services.AddControllers();

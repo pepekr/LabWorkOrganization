@@ -1,4 +1,4 @@
-﻿using LabWorkOrganization.Application;
+using LabWorkOrganization.Application;
 using LabWorkOrganization.Infrastructure;
 
 namespace LabWorkOrganization.API
@@ -7,7 +7,10 @@ namespace LabWorkOrganization.API
     {
         public static IServiceCollection AddAppDI(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddApplicationDI().AddInfrastructureDI(configuration);
+            services.AddInfrastructureDI(configuration);
+
+            services.AddApplicationDI();
+
             return services;
         }
     }

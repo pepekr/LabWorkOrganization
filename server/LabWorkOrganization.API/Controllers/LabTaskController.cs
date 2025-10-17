@@ -30,9 +30,9 @@ namespace LabWorkOrganization.API.Controllers
                 return Ok(result.Data);
             }
             [HttpGet("/getById/{id}")]
-            public async Task<IActionResult> GetTaskById([FromRoute] Guid id, [FromBody] bool isExternalCourse)
+            public async Task<IActionResult> GetTaskById([FromRoute] Guid id, [FromBody] Guid courseId, [FromBody] bool isExternalCourse)
             {
-                var result = await _labTaskService.GetTaskById(id, isExternalCourse);
+                var result = await _labTaskService.GetTaskById(id, courseId, isExternalCourse);
                 if (!result.IsSuccess)
                 {
                     return BadRequest(result.ErrorMessage);
@@ -51,9 +51,9 @@ namespace LabWorkOrganization.API.Controllers
             }
 
             [HttpDelete("/delete/{id}")]
-            public async Task<IActionResult> DeleteTask([FromRoute] Guid id, [FromBody] bool isExternalTask)
+            public async Task<IActionResult> DeleteTask([FromRoute] Guid id, [FromBody] Guid courseId, [FromBody] bool isExternalTask)
             {
-                var result = await _labTaskService.DeleteTask(id, isExternalTask);
+                var result = await _labTaskService.DeleteTask(id, courseId, isExternalTask);
                 if (!result.IsSuccess)
                 {
                     return BadRequest(result.ErrorMessage);
