@@ -1,6 +1,5 @@
-using LabWorkOrganization.Application.Dtos;
-using LabWorkOrganization.Application.Services;
-using LabWorkOrganization.Domain.Entities;
+using LabWorkOrganization.Application.Dtos.CourseDtos;
+using LabWorkOrganization.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,13 +10,13 @@ namespace LabWorkOrganization.API.Controllers
     [ApiController]
     public class CourseController : ControllerBase
     {
-        private readonly CourseService _courseService;
-        public CourseController(CourseService courseService)
+        private readonly ICourseService _courseService;
+        public CourseController(ICourseService courseService)
         {
             _courseService = courseService;
         }
 
-        [HttpGet("/getAll")]
+        [HttpGet("getAll")]
         public async Task<IActionResult> GetAllCourses()
         {
             var result = await _courseService.GetAllCourses();
@@ -27,7 +26,7 @@ namespace LabWorkOrganization.API.Controllers
             }
             return Ok(result.Data);
         }
-        [HttpGet("/getById/{id}")]
+        [HttpGet("getById/{id}")]
         public async Task<IActionResult> GetCourseById([FromRoute] Guid id, [FromBody] bool isExternalCourse)
         {
             var result = await _courseService.GetCourseById(id, isExternalCourse);
@@ -37,10 +36,10 @@ namespace LabWorkOrganization.API.Controllers
             }
             return Ok(result.Data);
         }
-        [HttpPost("/create")]
-        public async Task<IActionResult> CreateCourse([FromBody] CourseCreationalDto course, [FromBody] bool useExternal)
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateCourse([FromBody] CourseCreationalDto course)
         {
-            var result = await _courseService.CreateCourse(course, useExternal);
+            var result = await _courseService.CreateCourse(course, course.UseExternal);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
@@ -48,7 +47,7 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
-        [HttpDelete("/delete/{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteCourse([FromRoute] Guid id, [FromBody] bool isExternalCourse)
         {
             var result = await _courseService.DeleteCourse(id);
@@ -59,10 +58,10 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
-        [HttpPatch("/update/{id}")]
-        public async Task<IActionResult> UpdateCourse([FromRoute] Guid id, [FromBody] Course course, [FromBody] bool isExternalCourse)
+        [HttpPatch("update/{id}")]
+        public async Task<IActionResult> UpdateCourse([FromRoute] Guid id, [FromBody] CourseAlterDto course)
         {
-            var result = await _courseService.UpdateCourse(course, isExternalCourse);
+            var result = await _courseService.UpdateCourse(course.course, course.useExternal);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);

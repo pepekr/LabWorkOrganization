@@ -1,5 +1,6 @@
 using LabWorkOrganization.Application.Dtos;
-using LabWorkOrganization.Application.Services;
+using LabWorkOrganization.Application.Dtos.SubGroupDtos;
+using LabWorkOrganization.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabWorkOrganization.API.Controllers
@@ -7,13 +8,13 @@ namespace LabWorkOrganization.API.Controllers
     [Route("api/courses/{courseId}/subgroups")]
     public class SubGroupController : ControllerBase
     {
-        private readonly SubgroupService _subGroupService;
-        public SubGroupController(SubgroupService subGroupService)
+        private readonly ISubgroupService _subGroupService;
+        public SubGroupController(ISubgroupService subGroupService)
         {
             _subGroupService = subGroupService;
         }
 
-        [HttpPost("/create")]
+        [HttpPost("create")]
         public async Task<IActionResult> CreateSubgroup([FromBody] SubGroupCreationalDto subgroup)
         {
             var result = await _subGroupService.CreateSubgroup(subgroup);
@@ -23,7 +24,7 @@ namespace LabWorkOrganization.API.Controllers
             }
             return Ok(result.Data);
         }
-        [HttpGet("/getAll")]
+        [HttpGet("getAll")]
         public async Task<IActionResult> GetAllSubgroupsByCourseId([FromRoute] Guid courseId)
         {
             var result = await _subGroupService.GetAllByCourseId(courseId);
