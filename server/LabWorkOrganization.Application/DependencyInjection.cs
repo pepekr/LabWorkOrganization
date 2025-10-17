@@ -1,3 +1,4 @@
+using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,13 +8,13 @@ namespace LabWorkOrganization.Application
     {
         public static IServiceCollection AddApplicationDI(this IServiceCollection services)
         {
-            services.AddScoped<UserService>();
-            services.AddScoped<CourseService>();
-            services.AddScoped<LabTaskService>();
-            services.AddScoped<SubgroupService>();
-            services.AddScoped<AuthService>();
-            services.AddScoped<ExternalAuthService>();
-            services.AddScoped<ExternalTokenService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<ICourseService, CourseService>();
+            services.AddScoped<ILabTaskService, LabTaskService>();
+            services.AddScoped<ISubgroupService, SubgroupService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IExternalAuthService, ExternalAuthService>();
+            services.AddScoped<IExternalTokenService, ExternalTokenService>();
             return services;
         }
     }
