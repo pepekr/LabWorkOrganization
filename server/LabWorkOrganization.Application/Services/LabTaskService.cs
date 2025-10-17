@@ -9,13 +9,13 @@ namespace LabWorkOrganization.Application.Services
     {
         private readonly ICourseScopedRepository<LabTask> _crudRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ICourseScopedExternalRepository<LabTask> _externalCrudRepository;
+        private readonly IExternalCrudRepoFactory _externalCrudFactory;
         private readonly UserService _userService;
         private readonly CourseService _courseService;
-        public LabTaskService(IUnitOfWork IUnitOfWork, ICourseScopedExternalRepository<LabTask> IExternalCrudRepository, ICourseScopedRepository<LabTask> taskRepo, CourseService courseService)
+        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, ICourseScopedRepository<LabTask> taskRepo, CourseService courseService)
         {
             _unitOfWork = IUnitOfWork;
-            _externalCrudRepository = IExternalCrudRepository;
+            _externalCrudFactory = IExternalCrudFactory;
             _crudRepository = taskRepo;
             _courseService = courseService;
         }
@@ -53,7 +53,8 @@ namespace LabWorkOrganization.Application.Services
                 };
                 if (useExternal)
                 {
-                    await _externalCrudRepository.AddAsync(newTask);
+                    var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{labTask.CourseId}/courseWork");
+                    await repo.AddAsync(newTask);
                 }
                 await _crudRepository.AddAsync(newTask);
                 await _unitOfWork.SaveChangesAsync();
@@ -65,13 +66,15 @@ namespace LabWorkOrganization.Application.Services
                 return Result<LabTask>.Failure($"An error occurred while creating the task: {ex.Message}");
             }
         }
-        public async Task<Result<LabTask?>> GetTaskById(Guid id, bool external = false)
+        public async Task<Result<LabTask?>> GetTaskById(Guid id, Guid courseId, bool external = false)
         {
             try
             {
                 if (external)
                 {
-                    return Result<LabTask?>.Success(await _externalCrudRepository.GetByIdAsync(id));
+                    var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
+
+                    return Result<LabTask?>.Success(await repo.GetByIdAsync(id));
                 }
                 return Result<LabTask?>.Success(await _crudRepository.GetByIdAsync(id));
             }
@@ -88,7 +91,9 @@ namespace LabWorkOrganization.Application.Services
             {
                 if (external)
                 {
-                    return Result<IEnumerable<LabTask>>.Success(await _externalCrudRepository.GetAllByCourseIdAsync(courseId));
+                    var repo = (ICourseScopedExternalRepository<LabTask>)_externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
+
+                    return Result<IEnumerable<LabTask>>.Success(await repo.GetAllByCourseIdAsync(courseId));
                 }
                 return Result<IEnumerable<LabTask>>.Success(await _crudRepository.GetAllByCourseIdAsync(courseId));
             }
@@ -98,15 +103,16 @@ namespace LabWorkOrganization.Application.Services
             }
 
         }
-        public async Task<Result<IEnumerable<LabTask>>> GetAllTasks(bool isGetExternal = false)
+        public async Task<Result<IEnumerable<LabTask>>> GetAllTasks(Guid courseId, bool isGetExternal = false)
         {
             try
             {
                 var tasks = await _crudRepository.GetAllAsync();
                 if (isGetExternal)
                 {
+                    var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
 
-                    tasks.Concat(await _externalCrudRepository.GetAllAsync() ?? Enumerable.Empty<LabTask>());
+                    tasks.Concat(await repo.GetAllAsync() ?? Enumerable.Empty<LabTask>());
                 }
                 return Result<IEnumerable<LabTask>>.Success(tasks);
             }
@@ -127,7 +133,9 @@ namespace LabWorkOrganization.Application.Services
                 }
                 if (updateExternal && labTask.ExternalId is not null)
                 {
-                    await _externalCrudRepository.UpdateAsync(labTask, labTask.ExternalId.Value);
+                    var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{labTask.CourseId}/courseWork");
+
+                    await repo.UpdateAsync(labTask, labTask.ExternalId.Value);
                 }
                 _crudRepository.Update(labTask);
                 await _unitOfWork.SaveChangesAsync();
@@ -139,7 +147,7 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        public async Task<Result<LabTask>> DeleteTask(Guid id, bool deleteExternal)
+        public async Task<Result<LabTask>> DeleteTask(Guid id, Guid courseId, bool deleteExternal)
         {
             try
             {
@@ -151,7 +159,9 @@ namespace LabWorkOrganization.Application.Services
                 await IsCurrentUserOwnerOfCourse(task.CourseId);
                 if (deleteExternal && task.ExternalId is not null)
                 {
-                    await _externalCrudRepository.DeleteAsync(task.ExternalId.Value);
+                    var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
+
+                    await repo.DeleteAsync(task.ExternalId.Value);
                 }
                 _crudRepository.Delete(task);
                 await _unitOfWork.SaveChangesAsync();

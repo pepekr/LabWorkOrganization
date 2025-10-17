@@ -8,13 +8,14 @@ namespace LabWorkOrganization.Application.Services
     public class CourseService
     {
         private readonly ICrudRepository<Course> _crudRepository;
-        private readonly IExternalCrudRepo<Course> _externalCrudRepository;
+        //private readonly IExternalCrudRepo<Course> _externalCrudRepository;
+        private readonly IExternalCrudRepoFactory _externalCrudFactory;
         private readonly IUnitOfWork _unitOfWork;
-        public CourseService(ICrudRepository<Course> crudRepository, IUnitOfWork IUnitOfWork, IExternalCrudRepo<Course> IExternalCrudRepository)
+        public CourseService(ICrudRepository<Course> crudRepository, IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory)
         {
             _crudRepository = crudRepository;
             _unitOfWork = IUnitOfWork;
-            _externalCrudRepository = IExternalCrudRepository;
+            _externalCrudFactory = IExternalCrudFactory;
         }
         public async Task<Result<Course>> CreateCourse(CourseCreationalDto course, bool useExternal)
         {
@@ -36,8 +37,8 @@ namespace LabWorkOrganization.Application.Services
                 };
                 if (useExternal)
                 {
-
-                    await _externalCrudRepository.AddAsync(newCourse);
+                    var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
+                    await repo.AddAsync(newCourse);
                 }
                 await _crudRepository.AddAsync(newCourse);
                 await _unitOfWork.SaveChangesAsync();
@@ -57,7 +58,9 @@ namespace LabWorkOrganization.Application.Services
                 if (id.Equals(null)) throw new ArgumentNullException(nameof(id));
                 if (external)
                 {
-                    return Result<Course?>.Success(await _externalCrudRepository.GetByIdAsync(id));
+                    var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
+
+                    return Result<Course?>.Success(await repo.GetByIdAsync(id));
                 }
                 return Result<Course?>.Success(await _crudRepository.GetByIdAsync(id));
             }
@@ -75,8 +78,9 @@ namespace LabWorkOrganization.Application.Services
                 IEnumerable<Course> togetherCourses = courses ?? Enumerable.Empty<Course>();
                 if (isGetExternal)
                 {
+                    var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
                     togetherCourses = (courses ?? Enumerable.Empty<Course>())
-                       .Concat(await _externalCrudRepository.GetAllAsync() ?? Enumerable.Empty<Course>());
+                       .Concat(await repo.GetAllAsync() ?? Enumerable.Empty<Course>());
                 }
                 return Result<IEnumerable<Course>>.Success(togetherCourses);
             }
@@ -100,7 +104,8 @@ namespace LabWorkOrganization.Application.Services
                 {
                     if (course.ExternalId.HasValue)
                     {
-                        await _externalCrudRepository.UpdateAsync(course, course.ExternalId.Value);
+                        var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
+                        await repo.UpdateAsync(course, course.ExternalId.Value);
                     }
                 }
                 _crudRepository.Update(course);

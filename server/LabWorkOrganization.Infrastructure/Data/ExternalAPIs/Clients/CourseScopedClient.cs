@@ -7,8 +7,8 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
     public class CourseScopedClient<TEntity, TResponse> : ClassroomClient<TEntity, TResponse>, ICourseScopedExternalRepository<TEntity>
          where TEntity : class, IHasCourseId
     {
-        public CourseScopedClient(string accessToken, HttpClient client, string baseUrl, IMapper mapper)
-            : base(accessToken, client, baseUrl, mapper)
+        public CourseScopedClient(HttpClient client, string baseUrl, IMapper mapper, IExternalTokenProvider extTokenProvider)
+            : base(client, baseUrl, mapper, extTokenProvider)
         {
         }
 

@@ -11,19 +11,17 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
     public class ClassroomClient<TEntity, TResponse> : IExternalCrudRepo<TEntity>
         where TEntity : class
     {
-        protected readonly string _accessToken;
         protected readonly HttpClient _httpClient;
         protected readonly string _baseUrl;
         protected readonly JsonSerializerOptions _jsonOptions;
         protected readonly IMapper _mapper;
         protected readonly IExternalTokenProvider _tokenProvider;
-        public ClassroomClient(string accessToken, HttpClient client, string baseUrl, IMapper mapper)
+        public ClassroomClient(HttpClient client, string baseUrl, IMapper mapper, IExternalTokenProvider tokenProvider)
         {
+            _tokenProvider = tokenProvider;
             _httpClient = client;
-            _accessToken = accessToken;
             _baseUrl = baseUrl;
             _mapper = mapper;
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
