@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace LabWorkOrganization.Domain.Entities
 {
@@ -11,9 +12,11 @@ namespace LabWorkOrganization.Domain.Entities
         public string HashedPassword { get; set; }
         public string? SubGoogleId { get; set; }
         public Role? Role { get; set; } // e.g., "Student", "Teacher", "Admin"
-
+        [JsonIgnore]
         public ICollection<UserTask> UserTasks { get; set; } = new List<UserTask>();
+        [JsonIgnore]
         public ICollection<SubGroup> SubGroups { get; set; } = new List<SubGroup>();
+        [JsonIgnore]
         public ICollection<ExternalToken> ExternalTokens { get; set; } = new List<ExternalToken>();
     }
 

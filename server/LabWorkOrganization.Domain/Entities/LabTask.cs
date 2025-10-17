@@ -1,5 +1,6 @@
 using LabWorkOrganization.Domain.Intefaces;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace LabWorkOrganization.Domain.Entities
 {
@@ -12,9 +13,10 @@ namespace LabWorkOrganization.Domain.Entities
         public DateTime DueDate { get; set; }
         public bool IsSentRequired { get; set; }
         public TimeSpan TimeLimitPerStudent { get; set; }
-
+        [JsonIgnore]
         public ICollection<UserTask> userTasks { get; set; } = new List<UserTask>();
         public Guid CourseId { get; set; }
+        [JsonIgnore]
         public Course Course { get; set; }
     }
 }

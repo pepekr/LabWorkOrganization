@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace LabWorkOrganization.Domain.Entities
 {
@@ -8,7 +9,7 @@ namespace LabWorkOrganization.Domain.Entities
         [Key]
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-
+        [JsonIgnore]
         [ForeignKey(nameof(UserId))]
         public User User { get; set; }
         public string AccessToken { get; set; }

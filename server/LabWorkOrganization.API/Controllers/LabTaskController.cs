@@ -1,7 +1,7 @@
 namespace LabWorkOrganization.API.Controllers
 {
     using global::LabWorkOrganization.Application.Dtos.LabTaskDtos;
-    using global::LabWorkOrganization.Application.Services;
+    using global::LabWorkOrganization.Application.Interfaces;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
