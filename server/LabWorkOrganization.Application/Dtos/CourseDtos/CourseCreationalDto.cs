@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace LabWorkOrganization.Application.Dtos
+namespace LabWorkOrganization.Application.Dtos.CourseDtos
 {
     public class CourseCreationalDto
     {
@@ -10,6 +10,8 @@ namespace LabWorkOrganization.Application.Dtos
         public TimeSpan LessonDuration { get; set; }
         [Required]
         public DateTime EndOfCourse { get; set; }
+
+        public bool UseExternal { get; set; }
     }
 
 }

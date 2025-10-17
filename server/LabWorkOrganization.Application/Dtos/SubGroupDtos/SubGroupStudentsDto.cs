@@ -1,4 +1,4 @@
-namespace LabWorkOrganization.Application.Dtos
+namespace LabWorkOrganization.Application.Dtos.SubGroupDtos
 {
     public class SubGroupStudentsDto
     {

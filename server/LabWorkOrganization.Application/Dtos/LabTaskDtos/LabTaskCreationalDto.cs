@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace LabWorkOrganization.Application.Dtos
+namespace LabWorkOrganization.Application.Dtos.LabTaskDtos
 {
     public class LabTaskCreationalDto
     {
@@ -14,6 +14,7 @@ namespace LabWorkOrganization.Application.Dtos
         public TimeSpan TimeLimitPerStudent { get; set; }
         [Required]
         public Guid CourseId { get; set; }
+        public bool UseExternal { get; set; }
 
     }
 

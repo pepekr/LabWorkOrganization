@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace LabWorkOrganization.Application.Dtos
+namespace LabWorkOrganization.Application.Dtos.SubGroupDtos
 {
     public class SubGroupCreationalDto
     {
