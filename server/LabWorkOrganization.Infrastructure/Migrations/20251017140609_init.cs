@@ -6,25 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LabWorkOrganization.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Course",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    LessonDuration = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    EndOfCourse = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Course", x => x.Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
@@ -35,6 +21,22 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Roles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Courses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExternalId = table.Column<Guid>(type: "uuid", nullable: true),
+                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    LessonDuration = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    EndOfCourse = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Courses", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -50,9 +52,9 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_SubGroups", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SubGroups_Course_CourseId",
+                        name: "FK_SubGroups_Courses_CourseId",
                         column: x => x.CourseId,
-                        principalTable: "Course",
+                        principalTable: "Courses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -62,6 +64,7 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExternalId = table.Column<Guid>(type: "uuid", nullable: true),
                     Title = table.Column<string>(type: "text", nullable: false),
                     DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsSentRequired = table.Column<bool>(type: "boolean", nullable: false),
@@ -72,9 +75,9 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Tasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tasks_Course_CourseId",
+                        name: "FK_Tasks_Courses_CourseId",
                         column: x => x.CourseId,
-                        principalTable: "Course",
+                        principalTable: "Courses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -86,7 +89,8 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false),
+                    HashedPassword = table.Column<string>(type: "text", nullable: false),
+                    SubGoogleId = table.Column<string>(type: "text", nullable: false),
                     RoleId = table.Column<Guid>(type: "uuid", nullable: false),
                     CourseId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
@@ -94,14 +98,36 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Users_Course_CourseId",
+                        name: "FK_Users_Courses_CourseId",
                         column: x => x.CourseId,
-                        principalTable: "Course",
+                        principalTable: "Courses",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Users_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ExternalTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AccessToken = table.Column<string>(type: "text", nullable: false),
+                    ExpiresIn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RefreshToken = table.Column<string>(type: "text", nullable: false),
+                    ApiName = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExternalTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExternalTokens_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -183,6 +209,16 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Courses_OwnerId",
+                table: "Courses",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExternalTokens_UserId",
+                table: "ExternalTokens",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_QueuePlaces_SubGroupId",
                 table: "QueuePlaces",
                 column: "SubGroupId");
@@ -213,6 +249,12 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_RoleId",
                 table: "Users",
                 column: "RoleId");
@@ -226,11 +268,26 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "IX_UserTasks_UserId",
                 table: "UserTasks",
                 column: "UserId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Courses_Users_OwnerId",
+                table: "Courses",
+                column: "OwnerId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Courses_Users_OwnerId",
+                table: "Courses");
+
+            migrationBuilder.DropTable(
+                name: "ExternalTokens");
+
             migrationBuilder.DropTable(
                 name: "QueuePlaces");
 
@@ -250,7 +307,7 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Course");
+                name: "Courses");
 
             migrationBuilder.DropTable(
                 name: "Roles");

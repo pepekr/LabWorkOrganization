@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LabWorkOrganization.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251010122402_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251017140609_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,9 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                     b.Property<DateTime>("EndOfCourse")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("ExternalId")
+                        .HasColumnType("uuid");
+
                     b.Property<TimeSpan>("LessonDuration")
                         .HasColumnType("interval");
 
@@ -41,9 +44,45 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Course");
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("LabWorkOrganization.Domain.Entities.ExternalToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApiName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresIn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ExternalTokens");
                 });
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.LabTask", b =>
@@ -57,6 +96,9 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ExternalId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsSentRequired")
                         .HasColumnType("boolean");
@@ -151,20 +193,27 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("HashedPassword")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("SubGoogleId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("RoleId");
 
@@ -208,6 +257,28 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                     b.HasIndex("SubGroupsId");
 
                     b.ToTable("SubGroupUser");
+                });
+
+            modelBuilder.Entity("LabWorkOrganization.Domain.Entities.Course", b =>
+                {
+                    b.HasOne("LabWorkOrganization.Domain.Entities.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("LabWorkOrganization.Domain.Entities.ExternalToken", b =>
+                {
+                    b.HasOne("LabWorkOrganization.Domain.Entities.User", "User")
+                        .WithMany("ExternalTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.LabTask", b =>
@@ -321,6 +392,8 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.User", b =>
                 {
+                    b.Navigation("ExternalTokens");
+
                     b.Navigation("UserTasks");
                 });
 #pragma warning restore 612, 618
