@@ -39,7 +39,7 @@ namespace LabWorkOrganization.Application.Services
                 {
                     try
                     {
-                        await _tokenValidation.ValidateOpaqueTokenAsync(tokenEntity.AccessToken);
+                        await _tokenValidation.ValidateOpaqueTokenAsync(tokenEntity.AccessToken, "access_token");
                         return Result<string>.Success(tokenEntity.AccessToken);
                     }
                     catch (SecurityTokenException)
@@ -69,8 +69,7 @@ namespace LabWorkOrganization.Application.Services
             try
             {
                 //need an opaque validation method this is for jwt only
-                await _tokenValidation.ValidateOpaqueTokenAsync(extTokenDto.AccessToken);
-                await _tokenValidation.ValidateOpaqueTokenAsync(extTokenDto.RefreshToken);
+                await _tokenValidation.ValidateOpaqueTokenAsync(extTokenDto.AccessToken, "access_token");
 
                 tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, extTokenDto.ApiName);
                 if (tokenEntity is null)

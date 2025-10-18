@@ -39,10 +39,10 @@ namespace LabWorkOrganization.Infrastructure.Auth
             return principal;
         }
 
-        public async Task<ClaimsPrincipal?> ValidateOpaqueTokenAsync(string token)
+        public async Task<ClaimsPrincipal?> ValidateOpaqueTokenAsync(string token, string tokenType)
         {
             var httpClient = new HttpClient();
-            var result = await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={token}");
+            var result = await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?{tokenType}={token}");
             if (!result.IsSuccessStatusCode)
             {
                 throw new SecurityTokenException("Invalid token");
