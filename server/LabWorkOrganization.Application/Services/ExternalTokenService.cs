@@ -38,7 +38,7 @@ namespace LabWorkOrganization.Application.Services
                 {   // TODO:
                     // need to check if expiration is okay,
                     // if not issue new one but with class like tokenIssuer
-                    await _tokenValidation.ValidateTokenAsync(tokenEntity.AccessToken);
+                    //await _tokenValidation.ValidateTokenAsync(tokenEntity.AccessToken);
                     return Result<string>.Success(tokenEntity.AccessToken);
                 }
                 throw new Exception("Access token was not found");
@@ -59,12 +59,13 @@ namespace LabWorkOrganization.Application.Services
 
         public async Task<Result<ExternalToken>> SaveTokenAsync(Guid userId, ExternalTokenDto extTokenDto)
         {
-            Domain.Entities.ExternalToken? tokenEntity = null; // declare here
+            Domain.Entities.ExternalToken? tokenEntity = null;
 
             try
             {
-                await _tokenValidation.ValidateTokenAsync(extTokenDto.AccessToken);
-                await _tokenValidation.ValidateTokenAsync(extTokenDto.RefreshToken);
+                //need an opaque validation method this is for jwt only
+                //await _tokenValidation.ValidateTokenAsync(extTokenDto.AccessToken);
+                //await _tokenValidation.ValidateTokenAsync(extTokenDto.RefreshToken);
 
                 tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, extTokenDto.ApiName);
                 if (tokenEntity is null)
@@ -82,7 +83,7 @@ namespace LabWorkOrganization.Application.Services
                 {
                     tokenEntity.AccessToken = extTokenDto.AccessToken;
                     tokenEntity.RefreshToken = extTokenDto.RefreshToken;
-                    _tokenStorage.SaveToken(tokenEntity);
+                    _tokenStorage.UpdateToken(tokenEntity);
                 }
 
                 await _unitOfWork.SaveChangesAsync();

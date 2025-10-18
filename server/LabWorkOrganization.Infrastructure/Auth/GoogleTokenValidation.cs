@@ -20,7 +20,7 @@ namespace LabWorkOrganization.Infrastructure.Auth
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = "https://accounts.google.com",
+                ValidIssuers = new[] { "https://accounts.google.com", "accounts.google.com" },
 
                 ValidateAudience = true,
                 ValidAudience = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID") ?? throw new Exception("Google id wasnt provided"),
@@ -28,7 +28,8 @@ namespace LabWorkOrganization.Infrastructure.Auth
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKeys = keys,
 
-                ValidateLifetime = true
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromMinutes(5)
             };
 
             var handler = new JwtSecurityTokenHandler();

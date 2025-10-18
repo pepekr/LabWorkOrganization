@@ -3,7 +3,6 @@ using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
 using LabWorkOrganization.Application.Dtos;
 using LabWorkOrganization.Application.Interfaces;
-using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
 using Microsoft.AspNetCore.Http;
@@ -13,39 +12,50 @@ namespace LabWorkOrganization.Application.Services
 {
     public class ExternalAuthService : IExternalAuthService
     {
-        private readonly IExternalTokenStorage _externalTokenStorage;
+        private readonly IExternalTokenService _externalTokenService;
         private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly string _currentUserId;
         private readonly string _currentUserEmail;
-        public ExternalAuthService(IExternalTokenStorage externalTokenStorage, IUserService userService, IUnitOfWork unitOfWork, IHttpContextAccessor ctx)
+        private readonly IExternalTokenValidation _tokenValidator;
+        public ExternalAuthService(IExternalTokenService externalTokenService, IUserService userService, IUnitOfWork unitOfWork, IHttpContextAccessor ctx, IExternalTokenValidation tokenValidator)
         {
-            _externalTokenStorage = externalTokenStorage;
+            _tokenValidator = tokenValidator;
+            _externalTokenService = externalTokenService;
             _userService = userService;
             _unitOfWork = unitOfWork;
             _currentUserId = ctx.HttpContext?.User?.FindFirst("id")?.Value ?? "";
-            _currentUserEmail = ctx.HttpContext?.User?.FindFirst("email")?.Value ?? "";
-            if (_currentUserEmail.Length == 0 || _currentUserId.Length == 0) throw new Exception("User not authenticated");
+            _currentUserEmail = ctx.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value ?? "";
+            if (_currentUserEmail.Length == 0 && _currentUserId.Length == 0) { throw new Exception("User not authenticated"); }
         }
         public async Task<Result<JWTTokenDto>> HandleExternalAuth(string code, ClaimsPrincipal? claimsPrincipal)
         {
             try
             {
-                var googleEmail = claimsPrincipal?.FindFirst(ClaimTypes.Email)?.Value;
+                TokenResponse tokenR = await GetGoogleTokensAsync(code);
+                ClaimsPrincipal? googleUserIdentityPrincipal = await _tokenValidator.ValidateTokenAsync(tokenR.IdToken);
+                var googleEmail = googleUserIdentityPrincipal?.FindFirst(ClaimTypes.Email)?.Value;
                 if (googleEmail != _currentUserEmail) throw new Exception("Email mismatch, use the same email you used in main application registration");
                 var userDbResult = await _userService.GetUserByEmail(googleEmail);
                 if (!userDbResult.IsSuccess) throw new Exception(userDbResult.ErrorMessage);
                 if (userDbResult.Data is null) throw new Exception("User not found");
-                TokenResponse tokenR = await GetGoogleTokensAsync(code);
-                var extTokenDto = new ExternalToken
+
+                var extTokenDto = new ExternalTokenDto
                 {
                     AccessToken = tokenR.AccessToken,
                     RefreshToken = tokenR.RefreshToken,
                     ExpiresIn = DateTime.UtcNow.AddSeconds(tokenR.ExpiresInSeconds ?? 3600),
                     ApiName = "Google",
-                    UserId = Guid.Parse(_currentUserId)
+
                 };
-                _externalTokenStorage.SaveToken(extTokenDto);
+
+                userDbResult.Data.SubGoogleId = googleUserIdentityPrincipal?
+                                                .FindFirst("sub")?.Value
+                                                ?? googleUserIdentityPrincipal?
+                                                .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                await _userService.UpdateUser(userDbResult.Data.Id, userDbResult.Data);
+                await _externalTokenService.SaveTokenAsync(Guid.Parse(_currentUserId), extTokenDto);
                 await _unitOfWork.SaveChangesAsync();
                 return Result<JWTTokenDto>.Success(
                     new JWTTokenDto
@@ -67,9 +77,17 @@ namespace LabWorkOrganization.Application.Services
             {
                 ClientSecrets = new ClientSecrets
                 {
-                    ClientId = "<YOUR_CLIENT_ID>",
-                    ClientSecret = "<YOUR_CLIENT_SECRET>"
-                }
+                    ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID"),
+                    ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
+                },
+                Scopes = new[]
+                {
+            "openid",
+            "email",
+            "profile",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile"
+        }
             };
 
             var flow = new GoogleAuthorizationCodeFlow(initializer);
