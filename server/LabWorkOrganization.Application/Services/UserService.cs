@@ -33,6 +33,10 @@ namespace LabWorkOrganization.Application.Services
             }
             return currentUserId;
         }
+        public string GetCurrentUserExternalId()
+        {
+            throw new NotImplementedException();
+        }
         public async Task<Result<User?>> GetUserByEmail(string email)
         {
             try
