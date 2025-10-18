@@ -21,7 +21,7 @@ namespace LabWorkOrganization.Application.Services
             _tokenProvider = ITokenProvider;
         }
 
-        public async Task<Result<string>> GetAccessTokenFromDbAsync(Guid userId, string apiName)
+        public async Task<Result<string>> GetAccessTokenFromDbAsync(string userId, string apiName)
         {
             try
             {
@@ -62,7 +62,7 @@ namespace LabWorkOrganization.Application.Services
                 return Result<string>.Failure(ex.Message);
             }
         }
-        public async Task<Result<ExternalToken>> SaveTokenAsync(Guid userId, ExternalTokenDto extTokenDto)
+        public async Task<Result<ExternalToken>> SaveTokenAsync(string userId, ExternalTokenDto extTokenDto)
         {
             Domain.Entities.ExternalToken? tokenEntity = null;
 
@@ -76,6 +76,7 @@ namespace LabWorkOrganization.Application.Services
                 {
                     tokenEntity = new Domain.Entities.ExternalToken
                     {
+                        Id = Guid.NewGuid().ToString(),
                         UserId = userId,
                         ApiName = extTokenDto.ApiName,
                         AccessToken = extTokenDto.AccessToken,
@@ -108,7 +109,7 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        public async Task<Result<ExternalToken>> GetRefreshedToken(string refreshToken, Guid userId, string apiName)
+        public async Task<Result<ExternalToken>> GetRefreshedToken(string refreshToken, string userId, string apiName)
         {
             try
             {

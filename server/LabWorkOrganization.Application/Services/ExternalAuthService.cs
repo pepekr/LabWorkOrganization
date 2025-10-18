@@ -55,7 +55,7 @@ namespace LabWorkOrganization.Application.Services
                                                 .FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 await _userService.UpdateUser(userDbResult.Data.Id, userDbResult.Data);
-                await _externalTokenService.SaveTokenAsync(Guid.Parse(_currentUserId), extTokenDto);
+                await _externalTokenService.SaveTokenAsync(_currentUserId, extTokenDto);
                 await _unitOfWork.SaveChangesAsync();
                 return Result<JWTTokenDto>.Success(
                     new JWTTokenDto

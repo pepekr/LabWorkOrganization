@@ -58,7 +58,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
             return _mapper.Map<TEntity>(createdDto);
         }
 
-        public async Task DeleteAsync(Guid externalId)
+        public async Task DeleteAsync(string externalId)
         {
             await EnsureAuthorizationHeader();
             var result = await _httpClient.DeleteAsync($"{_baseUrl}/{externalId}");
@@ -71,21 +71,21 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
             var res = await _httpClient.GetAsync(_baseUrl);
             res.EnsureSuccessStatusCode();
             var json = await res.Content.ReadAsStringAsync();
-            var temp = JsonSerializer.Deserialize<IEnumerable<TResponse>>(json)!;
+            var temp = JsonSerializer.Deserialize<IEnumerable<TResponse>>(json, _jsonOptions)!;
             return _mapper.Map<IEnumerable<TEntity>>(temp);
         }
 
-        public async Task<TEntity?> GetByIdAsync(Guid externalId)
+        public async Task<TEntity?> GetByIdAsync(string externalId)
         {
             await EnsureAuthorizationHeader();
             var res = await _httpClient.GetAsync($"{_baseUrl}/{externalId}");
             res.EnsureSuccessStatusCode();
             var json = await res.Content.ReadAsStringAsync();
-            var temp = JsonSerializer.Deserialize<TResponse>(json)!;
+            var temp = JsonSerializer.Deserialize<TResponse>(json, _jsonOptions)!;
             return _mapper.Map<TEntity>(temp);
         }
 
-        public async Task<TEntity> UpdateAsync(TEntity entity, Guid externalId)
+        public async Task<TEntity> UpdateAsync(TEntity entity, string externalId)
         {
             await EnsureAuthorizationHeader();
             var requestDto = _mapper.Map<TResponse>(entity);

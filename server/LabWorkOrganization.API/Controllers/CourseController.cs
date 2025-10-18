@@ -27,7 +27,7 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
         [HttpGet("getById/{id}")]
-        public async Task<IActionResult> GetCourseById([FromRoute] Guid id, [FromBody] bool isExternalCourse)
+        public async Task<IActionResult> GetCourseById([FromRoute] string id, [FromQuery] bool isExternalCourse)
         {
             var result = await _courseService.GetCourseById(id, isExternalCourse);
             if (!result.IsSuccess)
@@ -48,7 +48,7 @@ namespace LabWorkOrganization.API.Controllers
         }
 
         [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteCourse([FromRoute] Guid id, [FromBody] bool isExternalCourse)
+        public async Task<IActionResult> DeleteCourse([FromRoute] string id, [FromBody] bool isExternalCourse)
         {
             var result = await _courseService.DeleteCourse(id);
             if (!result.IsSuccess)
@@ -59,7 +59,7 @@ namespace LabWorkOrganization.API.Controllers
         }
 
         [HttpPatch("update/{id}")]
-        public async Task<IActionResult> UpdateCourse([FromRoute] Guid id, [FromBody] CourseAlterDto course)
+        public async Task<IActionResult> UpdateCourse([FromRoute] string id, [FromBody] CourseAlterDto course)
         {
             var result = await _courseService.UpdateCourse(course.course, course.useExternal);
             if (!result.IsSuccess)

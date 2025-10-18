@@ -8,13 +8,13 @@ namespace LabWorkOrganization.Domain.Entities
     public class QueuePlace : IHasSubroupId
     {
         [Key]
-        public Guid Id { get; set; }
+        public string Id { get; set; }
 
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
         [JsonIgnore]
         public User User { get; set; }
 
-        public Guid SubGroupId { get; set; }
+        public string SubGroupId { get; set; }
         [JsonIgnore]
         public SubGroup SubGroup { get; set; }
 

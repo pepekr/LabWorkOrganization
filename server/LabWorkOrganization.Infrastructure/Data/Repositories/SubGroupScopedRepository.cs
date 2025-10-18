@@ -7,7 +7,7 @@ namespace LabWorkOrganization.Infrastructure.Data.Repositories
     {
         public SubGroupScopedRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<TEntity>> GetAllBySubGroupIdAsync(Guid subGroupId)
+        public async Task<IEnumerable<TEntity>> GetAllBySubGroupIdAsync(string subGroupId)
         {
             return await _dbSet.Where(t => t.SubGroupId == subGroupId).ToListAsync();
         }

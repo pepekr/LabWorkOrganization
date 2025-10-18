@@ -8,7 +8,7 @@ namespace LabWorkOrganization.Infrastructure.Data.Repositories
     {
         public CourseScopedRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<TEntity>> GetAllByCourseIdAsync(Guid courseId)
+        public async Task<IEnumerable<TEntity>> GetAllByCourseIdAsync(string courseId)
         {
             return await _dbSet.Where(t => t.CourseId == courseId).ToListAsync();
         }

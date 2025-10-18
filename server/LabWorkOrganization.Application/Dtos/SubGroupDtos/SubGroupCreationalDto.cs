@@ -11,6 +11,6 @@ namespace LabWorkOrganization.Application.Dtos.SubGroupDtos
         [Required]
         public ICollection<string> StudentsEmails { get; set; }
         [Required]
-        public Guid CourseId { get; set; }
+        public string CourseId { get; set; }
     }
 }

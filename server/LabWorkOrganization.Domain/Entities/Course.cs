@@ -5,10 +5,10 @@ namespace LabWorkOrganization.Domain.Entities
     public class Course
     {
         [Key]
-        public Guid Id { get; set; }
-        public Guid? ExternalId { get; set; }
+        public string Id { get; set; }
+        public string? ExternalId { get; set; }
 
-        public Guid OwnerId { get; set; }
+        public string OwnerId { get; set; }
         public string? OwnerExternalId { get; set; } = null!;
         public User Owner { get; set; } = null!;
         public string Name { get; set; } = null!;

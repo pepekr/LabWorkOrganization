@@ -51,7 +51,7 @@ namespace LabWorkOrganization.Application.Services
                 return Result<User?>.Failure($"An error occurred while retrieving the user: {ex.Message}");
             }
         }
-        public async Task<Result<User?>> GetUserById(Guid id)
+        public async Task<Result<User?>> GetUserById(string id)
         {
             try
             {
@@ -94,7 +94,7 @@ namespace LabWorkOrganization.Application.Services
                 if (result.IsSuccess && result.Data is not null) throw new Exception("user with this email already exists");
                 var newUser = new User
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.NewGuid().ToString(),
                     Email = user.Email,
                     Name = user.Name,
 
@@ -110,7 +110,7 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        public async Task<Result<User>> DeleteUser(Guid id)
+        public async Task<Result<User>> DeleteUser(string id)
         {
             try
             {
@@ -126,7 +126,7 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        public async Task<Result<User>> UpdateUser(Guid id, User updatedUser)
+        public async Task<Result<User>> UpdateUser(string id, User updatedUser)
         {
             try
             {

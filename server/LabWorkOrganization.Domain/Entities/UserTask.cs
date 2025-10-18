@@ -6,11 +6,11 @@ namespace LabWorkOrganization.Domain.Entities
     public class UserTask
     {
         [Key]
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public string Id { get; set; }
+        public string UserId { get; set; }
         [JsonIgnore]
         public User User { get; set; }
-        public Guid TaskId { get; set; }
+        public string TaskId { get; set; }
         [JsonIgnore]
         public LabTask Task { get; set; }
         public bool IsCompleted { get; set; }

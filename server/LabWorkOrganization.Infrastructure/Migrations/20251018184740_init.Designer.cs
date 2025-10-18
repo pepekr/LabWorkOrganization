@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LabWorkOrganization.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251017141114_externalUserIdNull")]
-    partial class externalUserIdNull
+    [Migration("20251018184740_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,15 +27,14 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.Course", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("EndOfCourse")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ExternalId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("text");
 
                     b.Property<TimeSpan>("LessonDuration")
                         .HasColumnType("interval");
@@ -44,8 +43,12 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("OwnerExternalId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -56,9 +59,8 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.ExternalToken", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<string>("AccessToken")
                         .IsRequired()
@@ -75,8 +77,9 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -87,18 +90,18 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.LabTask", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ExternalId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsSentRequired")
                         .HasColumnType("boolean");
@@ -119,18 +122,19 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.QueuePlace", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("SpecifiedTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("SubGroupId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("SubGroupId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -143,9 +147,8 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.Role", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -158,16 +161,16 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.SubGroup", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.PrimitiveCollection<int[]>("AllowedDays")
                         .IsRequired()
                         .HasColumnType("integer[]");
 
-                    b.Property<Guid>("CourseId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -182,12 +185,11 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.User", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
-                    b.Property<Guid?>("CourseId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("CourseId")
+                        .HasColumnType("text");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -201,8 +203,8 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("RoleId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("text");
 
                     b.Property<string>("SubGoogleId")
                         .HasColumnType("text");
@@ -221,18 +223,19 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("LabWorkOrganization.Domain.Entities.UserTask", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("TaskId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("TaskId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -245,11 +248,11 @@ namespace LabWorkOrganization.Infrastructure.Migrations
 
             modelBuilder.Entity("SubGroupUser", b =>
                 {
-                    b.Property<Guid>("StudentsId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("StudentsId")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("SubGroupsId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("SubGroupsId")
+                        .HasColumnType("text");
 
                     b.HasKey("StudentsId", "SubGroupsId");
 
