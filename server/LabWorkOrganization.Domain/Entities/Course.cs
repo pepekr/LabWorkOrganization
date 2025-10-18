@@ -9,6 +9,7 @@ namespace LabWorkOrganization.Domain.Entities
         public Guid? ExternalId { get; set; }
 
         public Guid OwnerId { get; set; }
+        public string? OwnerExternalId { get; set; } = null!;
         public User Owner { get; set; } = null!;
         public string Name { get; set; } = null!;
         public TimeSpan LessonDuration { get; set; }

@@ -9,28 +9,46 @@ namespace LabWorkOrganization.Infrastructure.Mapping
     {
         public ClassroomMappingProfile()
         {
-
+            // Mapping from DTO → Entity
             CreateMap<CourseClassroomDto, Course>()
-                .ForMember(dest => dest.ExternalId,
-                    opt => opt.MapFrom(src => ParseGuid(src.Id)))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                // Map ownerId in DTO to OwnerExternalId in Entity
+                .ForMember(dest => dest.OwnerExternalId, opt => opt.MapFrom(src => src.ownerId))
+                // Ignore internal DB and external IDs
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.ExternalId, opt => opt.Ignore())
+                // LessonDuration exists in internal entity, set default
                 .ForMember(dest => dest.LessonDuration, opt => opt.MapFrom(_ => TimeSpan.FromMinutes(90)))
-                .ForMember(dest => dest.EndOfCourse, opt => opt.MapFrom(src => src.UpdateTime.AddMonths(6)))
+                // EndOfCourse is internal-only, ignore
+                .ForMember(dest => dest.EndOfCourse, opt => opt.Ignore())
+                // Collections to ignore
                 .ForMember(dest => dest.Teachers, opt => opt.Ignore())
                 .ForMember(dest => dest.Tasks, opt => opt.Ignore())
-                .ForMember(dest => dest.SubGroups, opt => opt.Ignore())
-                .ReverseMap()
-                .ForMember(dest => dest.Id,
-                    opt => opt.MapFrom(src => src.ExternalId.HasValue ? src.ExternalId.ToString() : null!))
-                .ForMember(dest => dest.UpdateTime,
-                    opt => opt.MapFrom(src => src.EndOfCourse.AddMonths(-6)))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
+                .ForMember(dest => dest.SubGroups, opt => opt.Ignore());
 
+            // Mapping from Entity → DTO
+            CreateMap<Course, CourseClassroomDto>()
+                // Map OwnerExternalId → DTO ownerId
+                .ForMember(dest => dest.ownerId, opt => opt.MapFrom(src => src.OwnerExternalId))
+                // DTO id is managed by Google, ignore
+                .ForMember(dest => dest.id, opt => opt.Ignore())
+                // Fill creationTime/updateTime with UTC now
+                .ForMember(dest => dest.creationTime, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.updateTime, opt => opt.MapFrom(src => DateTime.UtcNow))
+                // Map Name only; ignore other fields not present in Entity
+                .ForMember(dest => dest.name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.section, opt => opt.Ignore())
+                .ForMember(dest => dest.descriptionHeading, opt => opt.Ignore())
+                .ForMember(dest => dest.description, opt => opt.Ignore())
+                .ForMember(dest => dest.room, opt => opt.Ignore())
+                .ForMember(dest => dest.enrollmentCode, opt => opt.Ignore())
+                .ForMember(dest => dest.courseState, opt => opt.Ignore())
+                .ForMember(dest => dest.alternateLink, opt => opt.Ignore())
+                .ForMember(dest => dest.teacherGroupEmail, opt => opt.Ignore())
+                .ForMember(dest => dest.courseGroupEmail, opt => opt.Ignore());
 
-
+            // LabWork task mapping (unchanged)
             CreateMap<LabWorkClassroomDto, LabTask>()
-                .ForMember(dest => dest.ExternalId,
-                    opt => opt.MapFrom(src => ParseGuid(src.Id)))
+                .ForMember(dest => dest.ExternalId, opt => opt.MapFrom(src => ParseGuid(src.Id)))
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.DueDate, opt => opt.MapFrom(src => GetDueDate(src)))
                 .ForMember(dest => dest.IsSentRequired, opt => opt.MapFrom(_ => false))
@@ -39,8 +57,7 @@ namespace LabWorkOrganization.Infrastructure.Mapping
                 .ForMember(dest => dest.CourseId, opt => opt.Ignore())
                 .ForMember(dest => dest.Course, opt => opt.Ignore())
                 .ReverseMap()
-                .ForMember(dest => dest.Id,
-                    opt => opt.MapFrom(src => src.ExternalId.HasValue ? src.ExternalId.ToString() : null!))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ExternalId.HasValue ? src.ExternalId.ToString() : null!))
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.CreationTime, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdateTime, opt => opt.MapFrom(src => DateTime.UtcNow))
@@ -58,7 +75,6 @@ namespace LabWorkOrganization.Infrastructure.Mapping
                     Nanos = 0
                 }));
         }
-
 
         private static Guid? ParseGuid(string? id)
         {

@@ -30,11 +30,22 @@ namespace LabWorkOrganization.Application.Services
                     throw new ArgumentException(string.Join("; ", errors));
                 }
                 var userId = Guid.Parse(_userService.GetCurrentUserId());
+                // CHANGE THIS TO A JUST GET SUB ID FROM TOKEN
+                var user = await _userService.GetUserById(userId);
+                if (!user.IsSuccess)
+                {
+                    throw new ArgumentException("User not found");
+                }
+                if (user.Data.SubGoogleId is null)
+                {
+                    throw new ArgumentException("User does not have an external ID");
+                }
 
                 var newCourse = new Course
                 { // NOT ENTERING EXTERNAL ID EXTERNAL API WILL HANDLE IT
                     Id = Guid.NewGuid(),
-                    OwnerId = userId, // NEED TO IMPLEMENT AUTHORIZATION
+                    OwnerId = userId,
+                    OwnerExternalId = user.Data.SubGoogleId,
                     Name = course.Name,
                     LessonDuration = course.LessonDuration,
                     EndOfCourse = course.EndOfCourse
