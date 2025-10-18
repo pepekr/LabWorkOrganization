@@ -38,7 +38,7 @@ namespace LabWorkOrganization.Application.Services
                 {   // TODO:
                     // need to check if expiration is okay,
                     // if not issue new one but with class like tokenIssuer
-                    //await _tokenValidation.ValidateTokenAsync(tokenEntity.AccessToken);
+                    await _tokenValidation.ValidateOpaqueTokenAsync(tokenEntity.AccessToken);
                     return Result<string>.Success(tokenEntity.AccessToken);
                 }
                 throw new Exception("Access token was not found");
@@ -64,8 +64,8 @@ namespace LabWorkOrganization.Application.Services
             try
             {
                 //need an opaque validation method this is for jwt only
-                //await _tokenValidation.ValidateTokenAsync(extTokenDto.AccessToken);
-                //await _tokenValidation.ValidateTokenAsync(extTokenDto.RefreshToken);
+                await _tokenValidation.ValidateOpaqueTokenAsync(extTokenDto.AccessToken);
+                await _tokenValidation.ValidateOpaqueTokenAsync(extTokenDto.RefreshToken);
 
                 tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, extTokenDto.ApiName);
                 if (tokenEntity is null)
