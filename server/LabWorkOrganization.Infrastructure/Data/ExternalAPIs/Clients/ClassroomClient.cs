@@ -2,6 +2,7 @@ using AutoMapper;
 using LabWorkOrganization.Domain.Intefaces;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
 {
@@ -25,6 +26,10 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters =
+    {
+        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+    },
                 WriteIndented = false
             };
         }
