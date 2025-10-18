@@ -7,12 +7,12 @@ namespace LabWorkOrganization.Application.Interfaces
     public interface IUserService
     {
         Task<Result<User>> AddUser(UserRegisterDto user);
-        Task<Result<User>> DeleteUser(Guid id);
+        Task<Result<User>> DeleteUser(string id);
         Task<Result<IEnumerable<User>>> GetAllUsers();
         string GetCurrentUserId();
         string GetCurrentUserExternalId();
         Task<Result<User?>> GetUserByEmail(string email);
-        Task<Result<User?>> GetUserById(Guid id);
-        Task<Result<User>> UpdateUser(Guid id, User updatedUser);
+        Task<Result<User?>> GetUserById(string id);
+        Task<Result<User>> UpdateUser(string id, User updatedUser);
     }
 }

@@ -7,15 +7,15 @@ namespace LabWorkOrganization.Domain.Entities
     public class LabTask : IHasCourseId
     {
         [Key]
-        public Guid Id { get; set; }
-        public Guid? ExternalId { get; set; }
+        public string Id { get; set; }
+        public string? ExternalId { get; set; }
         public string Title { get; set; } = null!;
         public DateTime DueDate { get; set; }
         public bool IsSentRequired { get; set; }
         public TimeSpan TimeLimitPerStudent { get; set; }
         [JsonIgnore]
         public ICollection<UserTask> userTasks { get; set; } = new List<UserTask>();
-        public Guid CourseId { get; set; }
+        public string CourseId { get; set; }
         [JsonIgnore]
         public Course Course { get; set; }
     }

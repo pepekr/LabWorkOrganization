@@ -12,7 +12,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
         {
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllByCourseIdAsync(Guid courseId)
+        public async Task<IEnumerable<TEntity>> GetAllByCourseIdAsync(string courseId)
         {
             // here might be errors dont know how url based in google api will watch later
             await EnsureAuthorizationHeader();

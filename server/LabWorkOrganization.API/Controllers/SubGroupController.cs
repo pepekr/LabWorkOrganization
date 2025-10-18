@@ -25,7 +25,7 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
         [HttpGet("getAll")]
-        public async Task<IActionResult> GetAllSubgroupsByCourseId([FromRoute] Guid courseId)
+        public async Task<IActionResult> GetAllSubgroupsByCourseId([FromRoute] string courseId)
         {
             var result = await _subGroupService.GetAllByCourseId(courseId);
             if (!result.IsSuccess)
@@ -36,7 +36,7 @@ namespace LabWorkOrganization.API.Controllers
         }
 
         [HttpPost("{subGroupId}/queue/add")]
-        public async Task<IActionResult> AddToQueue([FromRoute] Guid subGroupId, [FromBody] QueuePlaceCreationalDto queuePlace)
+        public async Task<IActionResult> AddToQueue([FromRoute] string subGroupId, [FromBody] QueuePlaceCreationalDto queuePlace)
         {
             var result = await _subGroupService.AddToQueue(queuePlace);
             if (!result.IsSuccess)
@@ -47,7 +47,7 @@ namespace LabWorkOrganization.API.Controllers
         }
 
         [HttpPost("{subGroupId}/queue/remove")]
-        public async Task<IActionResult> RemoveFromQueue([FromRoute] Guid subGroupId, [FromBody] Guid queuePlaceId)
+        public async Task<IActionResult> RemoveFromQueue([FromRoute] string subGroupId, [FromBody] string queuePlaceId)
         {
             var result = await _subGroupService.RemoveFromQueue(queuePlaceId);
             if (!result.IsSuccess)

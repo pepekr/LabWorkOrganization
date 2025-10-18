@@ -23,7 +23,7 @@ namespace LabWorkOrganization.Application.Services
             _courseService = course_service;
         }
         // IDEALLY MOVE THIS FUNC OUT TO USER SERVICE OR SOMETHING ELSE BUT DONT CARE FOR NOW
-        private async Task IsCurrentUserOwnerOfCourse(Guid courseId)
+        private async Task IsCurrentUserOwnerOfCourse(string courseId)
         {
             var currentUserId = _userService.GetCurrentUserId();
             var course = await _courseService.GetCourseById(courseId);
@@ -59,7 +59,7 @@ namespace LabWorkOrganization.Application.Services
                 }
                 var newSubgroup = new SubGroup
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.NewGuid().ToString(),
                     Name = subgroup.Name,
                     CourseId = subgroup.CourseId,
                     AllowedDays = subgroup.AllowedDays,
@@ -97,7 +97,7 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        public async Task<Result<SubGroup>> GetAllByCourseId(Guid courseId)
+        public async Task<Result<SubGroup>> GetAllByCourseId(string courseId)
         {
             try
             {
@@ -153,7 +153,7 @@ namespace LabWorkOrganization.Application.Services
 
                 subgroup.Queue.Add(new QueuePlace
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.NewGuid().ToString(),
                     UserId = queuePlace.UserId,
                     SubGroupId = queuePlace.SubGroupId,
                     SpecifiedTime = queuePlace.SpecifiedTime
@@ -166,7 +166,7 @@ namespace LabWorkOrganization.Application.Services
                 return Result<SubGroup>.Failure($"An error occurred while adding to queue: {ex.Message}");
             }
         }
-        public async Task<Result<SubGroup>> RemoveFromQueue(Guid queuePlaceId)
+        public async Task<Result<SubGroup>> RemoveFromQueue(string queuePlaceId)
         {
             try
             {

@@ -12,7 +12,7 @@ namespace LabWorkOrganization.Infrastructure.Auth
         {
             _context = context;
         }
-        public async Task<ExternalToken?> GetAccessTokenAsync(Guid userId, string apiName)
+        public async Task<ExternalToken?> GetAccessTokenAsync(string userId, string apiName)
         {
             return await _context.ExternalTokens
      .FirstOrDefaultAsync(t => t.UserId == userId && t.ApiName == apiName);

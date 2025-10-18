@@ -57,7 +57,7 @@ namespace LabWorkOrganization.Application.Services
                 if (principal is null) throw new Exception("Invalid token");
                 var userId = principal.FindFirst("id")?.Value;
                 if (userId is null) throw new Exception("Invalid token");
-                var userDbResult = await _userService.GetUserById(Guid.Parse(userId));
+                var userDbResult = await _userService.GetUserById(userId);
                 if (!userDbResult.IsSuccess) throw new Exception(userDbResult.ErrorMessage);
                 if (userDbResult.Data is null) throw new Exception("User not found");
                 var access = _tokenManager.GenerateJwtToken(userDbResult.Data.Email, userDbResult.Data.Id.ToString(), userDbResult.Data.SubGoogleId.ToString(), 60);

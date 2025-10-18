@@ -7,8 +7,8 @@ namespace LabWorkOrganization.Domain.Entities
     public class ExternalToken
     {
         [Key]
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public string Id { get; set; }
+        public string UserId { get; set; }
         [JsonIgnore]
         [ForeignKey(nameof(UserId))]
         public User User { get; set; }

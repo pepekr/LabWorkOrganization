@@ -6,8 +6,8 @@ namespace LabWorkOrganization.Application.Interfaces
 {
     public interface IExternalTokenService
     {
-        Task<Result<string>> GetAccessTokenFromDbAsync(Guid userId, string apiName);
-        Task<Result<ExternalToken>> SaveTokenAsync(Guid userId, ExternalTokenDto extTokenDto);
-        Task<Result<ExternalToken>> GetRefreshedToken(string refreshToken, Guid userId, string apiName);
+        Task<Result<string>> GetAccessTokenFromDbAsync(string userId, string apiName);
+        Task<Result<ExternalToken>> SaveTokenAsync(string userId, ExternalTokenDto extTokenDto);
+        Task<Result<ExternalToken>> GetRefreshedToken(string refreshToken, string userId, string apiName);
     }
 }

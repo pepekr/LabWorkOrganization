@@ -15,7 +15,7 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "Roles",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -27,9 +27,10 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "Courses",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ExternalId = table.Column<Guid>(type: "uuid", nullable: true),
-                    OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    ExternalId = table.Column<string>(type: "text", nullable: true),
+                    OwnerId = table.Column<string>(type: "text", nullable: false),
+                    OwnerExternalId = table.Column<string>(type: "text", nullable: true),
                     Name = table.Column<string>(type: "text", nullable: false),
                     LessonDuration = table.Column<TimeSpan>(type: "interval", nullable: false),
                     EndOfCourse = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -43,10 +44,10 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "SubGroups",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     AllowedDays = table.Column<int[]>(type: "integer[]", nullable: false),
-                    CourseId = table.Column<Guid>(type: "uuid", nullable: false)
+                    CourseId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -63,13 +64,13 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "Tasks",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ExternalId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    ExternalId = table.Column<string>(type: "text", nullable: true),
                     Title = table.Column<string>(type: "text", nullable: false),
                     DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsSentRequired = table.Column<bool>(type: "boolean", nullable: false),
                     TimeLimitPerStudent = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    CourseId = table.Column<Guid>(type: "uuid", nullable: false)
+                    CourseId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -86,13 +87,13 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
                     HashedPassword = table.Column<string>(type: "text", nullable: false),
-                    SubGoogleId = table.Column<string>(type: "text", nullable: false),
-                    RoleId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CourseId = table.Column<Guid>(type: "uuid", nullable: true)
+                    SubGoogleId = table.Column<string>(type: "text", nullable: true),
+                    RoleId = table.Column<string>(type: "text", nullable: true),
+                    CourseId = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -106,16 +107,15 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                         name: "FK_Users_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "ExternalTokens",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
                     AccessToken = table.Column<string>(type: "text", nullable: false),
                     ExpiresIn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     RefreshToken = table.Column<string>(type: "text", nullable: false),
@@ -136,9 +136,9 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "QueuePlaces",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SubGroupId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    SubGroupId = table.Column<string>(type: "text", nullable: false),
                     SpecifiedTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -162,8 +162,8 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "SubGroupUser",
                 columns: table => new
                 {
-                    StudentsId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SubGroupsId = table.Column<Guid>(type: "uuid", nullable: false)
+                    StudentsId = table.Column<string>(type: "text", nullable: false),
+                    SubGroupsId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -186,9 +186,9 @@ namespace LabWorkOrganization.Infrastructure.Migrations
                 name: "UserTasks",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TaskId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    TaskId = table.Column<string>(type: "text", nullable: false),
                     IsCompleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>

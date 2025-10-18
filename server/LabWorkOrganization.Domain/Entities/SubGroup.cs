@@ -9,7 +9,7 @@ namespace LabWorkOrganization.Domain.Entities
     public class SubGroup : IHasCourseId
     {
         [Key]
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; } = null!;
         public DayOfWeek[] AllowedDays { get; set; }
         [JsonIgnore]
@@ -17,7 +17,7 @@ namespace LabWorkOrganization.Domain.Entities
         [JsonIgnore]
         public ICollection<User> Students { get; set; } = new List<User>();
 
-        public Guid CourseId { get; set; }
+        public string CourseId { get; set; }
         [JsonIgnore]
         public Course Course { get; set; }
     }

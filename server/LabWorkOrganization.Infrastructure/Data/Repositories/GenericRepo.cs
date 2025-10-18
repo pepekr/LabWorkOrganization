@@ -20,7 +20,7 @@ public class GenericRepo<TEntity> : ICrudRepository<TEntity>
         await _dbSet.AddAsync(entity);
         return entity;
     }
-    public async Task<TEntity?> GetByIdAsync(Guid id)
+    public async Task<TEntity?> GetByIdAsync(string id)
     {
         return await _dbSet.FindAsync(id);
     }

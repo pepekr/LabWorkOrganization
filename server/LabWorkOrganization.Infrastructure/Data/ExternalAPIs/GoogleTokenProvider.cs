@@ -17,7 +17,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs
 
         public async Task<string> GetAccessTokenAsync()
         {
-            var token = await _tokenStorage.GetAccessTokenAsync(Guid.Parse(_currentUserId), "Google");
+            var token = await _tokenStorage.GetAccessTokenAsync(_currentUserId, "Google");
             if (token == null) throw new Exception("No access token found");
             return token.AccessToken;
         }
