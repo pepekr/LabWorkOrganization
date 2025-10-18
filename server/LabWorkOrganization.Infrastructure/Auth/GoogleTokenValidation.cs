@@ -3,6 +3,7 @@ using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.Json;
 namespace LabWorkOrganization.Infrastructure.Auth
 {
     public class GoogleTokenValidation : IExternalTokenValidation
@@ -12,7 +13,7 @@ namespace LabWorkOrganization.Infrastructure.Auth
         {
             _jwksClient = jwksClient;
         }
-        public async Task<ClaimsPrincipal?> ValidateTokenAsync(string token)
+        public async Task<ClaimsPrincipal?> ValidateJwtTokenAsync(string token)
         {
             var keys = await _jwksClient.GetGoogleKeysAsync();
 
@@ -35,6 +36,33 @@ namespace LabWorkOrganization.Infrastructure.Auth
             var handler = new JwtSecurityTokenHandler();
 
             var principal = handler.ValidateToken(token, validationParameters, out _);
+            return principal;
+        }
+
+        public async Task<ClaimsPrincipal?> ValidateOpaqueTokenAsync(string token, string tokenType)
+        {
+            var httpClient = new HttpClient();
+            var result = await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?{tokenType}={token}");
+            if (!result.IsSuccessStatusCode)
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+            string json = await result.Content.ReadAsStringAsync();
+            var tokenInfo = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            if (tokenInfo is null)
+            {
+                throw new SecurityTokenException("Invalid token");
+            }
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, tokenInfo.GetValueOrDefault("sub", "")),
+                new Claim(ClaimTypes.Email, tokenInfo.GetValueOrDefault("email", "")),
+                new Claim("email_verified", tokenInfo.GetValueOrDefault("email_verified", "false")),
+                new Claim("scope", tokenInfo.GetValueOrDefault("scope", ""))
+            };
+
+            var identity = new ClaimsIdentity(claims, "GoogleToken");
+            var principal = new ClaimsPrincipal(identity);
             return principal;
         }
     }

@@ -2,6 +2,7 @@ using AutoMapper;
 using LabWorkOrganization.Domain.Intefaces;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
 {
@@ -25,6 +26,10 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters =
+    {
+        new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+    },
                 WriteIndented = false
             };
         }
@@ -39,6 +44,14 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients
             await EnsureAuthorizationHeader();
             TResponse requestDto = _mapper.Map<TResponse>(entity);
             var result = await _httpClient.PostAsJsonAsync(_baseUrl, requestDto, _jsonOptions);
+            if (!result.IsSuccessStatusCode)
+            {
+                var content = await result.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"Request failed with status code {(int)result.StatusCode} ({result.ReasonPhrase}). " +
+                    $"Response content: {content}"
+                );
+            }
             result.EnsureSuccessStatusCode();
             var json = await result.Content.ReadAsStringAsync();
             var createdDto = JsonSerializer.Deserialize<TResponse>(json, _jsonOptions)!;

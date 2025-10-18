@@ -33,7 +33,7 @@ namespace LabWorkOrganization.Application.Services
             try
             {
                 TokenResponse tokenR = await GetGoogleTokensAsync(code);
-                ClaimsPrincipal? googleUserIdentityPrincipal = await _tokenValidator.ValidateTokenAsync(tokenR.IdToken);
+                ClaimsPrincipal? googleUserIdentityPrincipal = await _tokenValidator.ValidateJwtTokenAsync(tokenR.IdToken);
                 var googleEmail = googleUserIdentityPrincipal?.FindFirst(ClaimTypes.Email)?.Value;
                 if (googleEmail != _currentUserEmail) throw new Exception("Email mismatch, use the same email you used in main application registration");
                 var userDbResult = await _userService.GetUserByEmail(googleEmail);

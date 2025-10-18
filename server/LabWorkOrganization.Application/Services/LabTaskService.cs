@@ -13,13 +13,15 @@ namespace LabWorkOrganization.Application.Services
         private readonly IExternalCrudRepoFactory _externalCrudFactory;
         private readonly IUserService _userService;
         private readonly ICourseService _courseService;
-        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, ICourseScopedRepository<LabTask> taskRepo, ICourseService courseService, IUserService userService)
+        private readonly IExternalTokenService _externalTokenService;
+        public LabTaskService(IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, ICourseScopedRepository<LabTask> taskRepo, ICourseService courseService, IUserService userService, IExternalTokenService IExternalTokenService)
         {
             _unitOfWork = IUnitOfWork;
             _externalCrudFactory = IExternalCrudFactory;
             _crudRepository = taskRepo;
             _courseService = courseService;
             _userService = userService;
+            _externalTokenService = IExternalTokenService;
         }
         private async Task IsCurrentUserOwnerOfCourse(Guid courseId)
         {
@@ -55,6 +57,10 @@ namespace LabWorkOrganization.Application.Services
                 };
                 if (useExternal)
                 {
+                    var userId = Guid.Parse(_userService.GetCurrentUserId());
+                    var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                        throw new Exception(accessTokenResult.ErrorMessage);
                     var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{labTask.CourseId}/courseWork");
                     await repo.AddAsync(newTask);
                 }
@@ -74,6 +80,10 @@ namespace LabWorkOrganization.Application.Services
             {
                 if (external)
                 {
+                    var userId = Guid.Parse(_userService.GetCurrentUserId());
+                    var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                        throw new Exception(accessTokenResult.ErrorMessage);
                     var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
 
                     return Result<LabTask?>.Success(await repo.GetByIdAsync(id));
@@ -93,6 +103,10 @@ namespace LabWorkOrganization.Application.Services
             {
                 if (external)
                 {
+                    var userId = Guid.Parse(_userService.GetCurrentUserId());
+                    var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                        throw new Exception(accessTokenResult.ErrorMessage);
                     var repo = (ICourseScopedExternalRepository<LabTask>)_externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
 
                     return Result<IEnumerable<LabTask>>.Success(await repo.GetAllByCourseIdAsync(courseId));
@@ -112,6 +126,10 @@ namespace LabWorkOrganization.Application.Services
                 var tasks = await _crudRepository.GetAllAsync();
                 if (isGetExternal)
                 {
+                    var userId = Guid.Parse(_userService.GetCurrentUserId());
+                    var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                        throw new Exception(accessTokenResult.ErrorMessage);
                     var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
 
                     tasks.Concat(await repo.GetAllAsync() ?? Enumerable.Empty<LabTask>());
@@ -135,6 +153,10 @@ namespace LabWorkOrganization.Application.Services
                 }
                 if (updateExternal && labTask.ExternalId is not null)
                 {
+                    var userId = Guid.Parse(_userService.GetCurrentUserId());
+                    var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                        throw new Exception(accessTokenResult.ErrorMessage);
                     var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{labTask.CourseId}/courseWork");
 
                     await repo.UpdateAsync(labTask, labTask.ExternalId.Value);
@@ -161,6 +183,10 @@ namespace LabWorkOrganization.Application.Services
                 await IsCurrentUserOwnerOfCourse(task.CourseId);
                 if (deleteExternal && task.ExternalId is not null)
                 {
+                    var userId = Guid.Parse(_userService.GetCurrentUserId());
+                    var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                        throw new Exception(accessTokenResult.ErrorMessage);
                     var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
 
                     await repo.DeleteAsync(task.ExternalId.Value);
