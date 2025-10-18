@@ -14,12 +14,13 @@ namespace LabWorkOrganization.Application.Services
         private readonly IUserService _userService;
         private readonly ICourseService _courseService;
         private readonly ICrudRepository<QueuePlace> _queuePlaceRepo;
-        public SubgroupService(ICourseScopedRepository<SubGroup> crudRepository, IUnitOfWork IUnitOfWork, ICrudRepository<QueuePlace> IQueuePlaceRepo, IUserService userService)
+        public SubgroupService(ICourseScopedRepository<SubGroup> crudRepository, IUnitOfWork IUnitOfWork, ICrudRepository<QueuePlace> IQueuePlaceRepo, IUserService userService, ICourseService course_service)
         {
             _crudRepository = crudRepository;
             _unitOfWork = IUnitOfWork;
             _queuePlaceRepo = IQueuePlaceRepo;
             _userService = userService;
+            _courseService = course_service;
         }
         // IDEALLY MOVE THIS FUNC OUT TO USER SERVICE OR SOMETHING ELSE BUT DONT CARE FOR NOW
         private async Task IsCurrentUserOwnerOfCourse(Guid courseId)
