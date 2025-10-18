@@ -11,7 +11,7 @@ namespace LabWorkOrganization.API.Controllers
             _extAuthService = extAuthService;
         }
         [HttpGet("external-login")]
-        public IActionResult ExternalLogin([FromQuery] string provider, [FromQuery] string returnUrl)
+        public IActionResult ExternalLogin([FromQuery] string returnUrl)
         {
             return Redirect(_extAuthService.RedirectUri());
         }

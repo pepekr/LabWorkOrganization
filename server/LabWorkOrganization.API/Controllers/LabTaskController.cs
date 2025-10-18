@@ -8,7 +8,7 @@ namespace LabWorkOrganization.API.Controllers
     namespace LabWorkOrganization.API.Controllers
     {
         [Authorize]
-        [Route("api/courses/{courseid}/tasks")]
+        [Route("api/courses/{courseId}/tasks")]
         [ApiController]
         public class LabTaskController : ControllerBase
         {
