@@ -27,7 +27,7 @@ namespace LabWorkOrganization.API.Controllers
         [HttpGet("getAll")]
         public async Task<IActionResult> GetAllSubgroupsByCourseId([FromRoute] string courseId)
         {
-            var result = await _subGroupService.GetAllByCourseId(courseId);
+            var result = await _subGroupService.GetAllSubgroupsByCourseId(courseId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
