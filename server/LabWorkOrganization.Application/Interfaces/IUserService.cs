@@ -9,6 +9,8 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<User>> AddUser(UserRegisterDto user);
         Task<Result<User>> DeleteUser(string id);
         Task<Result<IEnumerable<User>>> GetAllUsers();
+
+        Task<IEnumerable<User>> GetAllUsersByCourseId(string courseId, bool external = false);
         string GetCurrentUserId();
         string GetCurrentUserExternalId();
         Task<Result<User?>> GetUserByEmail(string email);

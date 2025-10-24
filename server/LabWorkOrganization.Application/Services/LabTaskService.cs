@@ -104,24 +104,52 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
+                var localTasks = await _crudRepository.GetAllByCourseIdAsync(courseId) ?? new List<LabTask>();
+
                 if (external)
                 {
                     var userId = _userService.GetCurrentUserId();
                     var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
                     if (!accessTokenResult.IsSuccess)
                         throw new Exception(accessTokenResult.ErrorMessage);
-                    var repo = (ICourseScopedExternalRepository<LabTask>)_externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
 
-                    return Result<IEnumerable<LabTask>>.Success(await repo.GetAllByCourseIdAsync(courseId));
+                    var repo = (ICourseScopedExternalRepository<LabTask>)
+                        _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
+
+                    var externalTasks = await repo.GetAllByCourseIdAsync(courseId) ?? Enumerable.Empty<LabTask>();
+
+                    // якщо локально пусто — створюємо локальні копії
+                    if (!localTasks.Any() && externalTasks.Any())
+                    {
+                        foreach (var t in externalTasks)
+                        {
+                            var localCopy = new LabTask
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                ExternalId = t.ExternalId ?? t.Id,
+                                Title = t.Title,
+                                DueDate = t.DueDate,
+                                CourseId = courseId,
+                                IsSentRequired = false,
+                                TimeLimitPerStudent = TimeSpan.FromMinutes(30)
+                            };
+                            await _crudRepository.AddAsync(localCopy);
+                        }
+                        await _unitOfWork.SaveChangesAsync();
+                        localTasks = await _crudRepository.GetAllByCourseIdAsync(courseId);
+                    }
+
+                    return Result<IEnumerable<LabTask>>.Success(localTasks);
                 }
-                return Result<IEnumerable<LabTask>>.Success(await _crudRepository.GetAllByCourseIdAsync(courseId));
+
+                return Result<IEnumerable<LabTask>>.Success(localTasks);
             }
             catch (Exception ex)
             {
-                return Result<IEnumerable<LabTask>>.Failure($"An error occurred while getting the task: {ex.Message}");
+                return Result<IEnumerable<LabTask>>.Failure($"Error getting tasks: {ex.Message}");
             }
-
         }
+
         public async Task<Result<IEnumerable<LabTask>>> GetAllTasks(string courseId, bool isGetExternal = false)
         {
             try

@@ -9,104 +9,112 @@ namespace LabWorkOrganization.Application.Services
 {
     public class SubgroupService : ISubgroupService
     {
-        private readonly ICourseScopedRepository<SubGroup> _crudRepository;
+        private readonly ICourseScopedRepository<SubGroup> _subGroupRepository;
+        private readonly ICrudRepository<QueuePlace> _queuePlaceRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
         private readonly ICourseService _courseService;
-        private readonly ICrudRepository<QueuePlace> _queuePlaceRepo;
-        public SubgroupService(ICourseScopedRepository<SubGroup> crudRepository, IUnitOfWork IUnitOfWork, ICrudRepository<QueuePlace> IQueuePlaceRepo, IUserService userService, ICourseService course_service)
+
+        public SubgroupService(
+            ICourseScopedRepository<SubGroup> subGroupRepository,
+            ICrudRepository<QueuePlace> queuePlaceRepository,
+            IUnitOfWork unitOfWork,
+            IUserService userService,
+            ICourseService courseService)
         {
-            _crudRepository = crudRepository;
-            _unitOfWork = IUnitOfWork;
-            _queuePlaceRepo = IQueuePlaceRepo;
+            _subGroupRepository = subGroupRepository;
+            _queuePlaceRepository = queuePlaceRepository;
+            _unitOfWork = unitOfWork;
             _userService = userService;
-            _courseService = course_service;
+            _courseService = courseService;
         }
-        // IDEALLY MOVE THIS FUNC OUT TO USER SERVICE OR SOMETHING ELSE BUT DONT CARE FOR NOW
-        private async Task IsCurrentUserOwnerOfCourse(string courseId)
+
+        private async Task EnsureCurrentUserIsOwnerOfCourse(string courseId)
         {
             var currentUserId = _userService.GetCurrentUserId();
             var course = await _courseService.GetCourseById(courseId);
-            if (!course.IsSuccess)
-            {
-                throw new ArgumentException(course.ErrorMessage);
-            }
-            if (course.Data?.OwnerId.ToString() != currentUserId)
-            {
-                throw new UnauthorizedAccessException("User not authorized to perform this action");
-            };
+            if (!course.IsSuccess || course.Data is null)
+                throw new Exception("Course not found");
+
+            if (course.Data.OwnerId != currentUserId)
+                throw new UnauthorizedAccessException("You are not the owner of this course");
         }
-        // MAYBE IMPLEMENT LOGIC WHERE ONLY OWNER OF COURSE CAN CREATE SUBGROUPS
+
         public async Task<Result<SubGroup>> CreateSubgroup(SubGroupCreationalDto subgroup)
         {
             try
             {
-                var errors = Validation.ValidationHelper.Validate(subgroup);
-                if (errors.Count > 0)
-                {
-                    throw new ArgumentException(string.Join("; ", errors));
-                }
+                await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
+
+                var validationErrors = Validation.ValidationHelper.Validate(subgroup);
+                if (validationErrors.Any())
+                    throw new ArgumentException(string.Join("; ", validationErrors));
+
                 var courseResult = await _courseService.GetCourseById(subgroup.CourseId);
-                if (!courseResult.IsSuccess) // or current user isnt an owner return
+                if (!courseResult.IsSuccess || courseResult.Data is null)
+                    throw new Exception(courseResult.ErrorMessage);
+
+                // тільки зареєстровані юзери
+                var studentList = new List<User>();
+                foreach (var email in subgroup.StudentsEmails)
                 {
-                    throw new ArgumentException(courseResult.ErrorMessage);
+                    var userResult = await _userService.GetUserByEmail(email);
+                    if (userResult.IsSuccess && userResult.Data is not null)
+                        studentList.Add(userResult.Data);
                 }
-                var sugGroupStudents = new List<User?>();
-                foreach (var stEmail in subgroup.StudentsEmails)
-                {
-                    var result = await _userService.GetUserByEmail(stEmail);
-                    if (result.IsSuccess) sugGroupStudents.Add(result.Data);
-                }
+
                 var newSubgroup = new SubGroup
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = subgroup.Name,
                     CourseId = subgroup.CourseId,
                     AllowedDays = subgroup.AllowedDays,
-                    Students = sugGroupStudents.Where(s => s is not null).Select(s => s!).ToList()
+                    Students = studentList
                 };
 
-                await _crudRepository.AddAsync(newSubgroup);
+                await _subGroupRepository.AddAsync(newSubgroup);
                 await _unitOfWork.SaveChangesAsync();
+
                 return Result<SubGroup>.Success(newSubgroup);
             }
             catch (Exception ex)
             {
-
-                Console.WriteLine($"An error occurred while creating the subgroup: {ex.Message}");
-                return Result<SubGroup>.Failure($"An error occurred while creating the subgroup: {ex.Message}");
+                return Result<SubGroup>.Failure($"Error creating subgroup: {ex.Message}");
             }
         }
 
-        public async Task<Result<SubGroup>> DeleteSubgroup(SubGroup subgroup)
+        public async Task<Result<SubGroup>> DeleteSubgroup(string subgroupId)
         {
             try
             {
-                var currentUserId = _userService.GetCurrentUserId();
-                if (currentUserId is null) throw new Exception("User not authorized");
-                var course = await _courseService.GetCourseById(subgroup.CourseId);
-                if (!course.IsSuccess || course.Data is null) throw new Exception("Course not found");
-                if (course.Data.OwnerId.ToString() != currentUserId) throw new Exception("User not authorized to delete this subgroup");
-                _crudRepository.Delete(subgroup);
+                var subgroup = await _subGroupRepository.GetByIdAsync(subgroupId);
+                if (subgroup is null)
+                    throw new Exception("Subgroup not found");
+
+                await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
+
+                _subGroupRepository.Delete(subgroup);
                 await _unitOfWork.SaveChangesAsync();
+
                 return Result<SubGroup>.Success(subgroup);
             }
             catch (Exception ex)
             {
-                return Result<SubGroup>.Failure($"An error occurred while deleting the subgroup: {ex.Message}");
+                return Result<SubGroup>.Failure($"Error deleting subgroup: {ex.Message}");
             }
         }
 
-        public async Task<Result<SubGroup>> GetAllByCourseId(string courseId)
+        // 🔥 головний метод — отримати всі підгрупи по courseId
+        public async Task<Result<IEnumerable<SubGroup>>> GetAllSubgroupsByCourseId(string courseId)
         {
             try
             {
-                var subgroups = await _crudRepository.GetAllByCourseIdAsync(courseId) ?? new List<SubGroup>();
-                return Result<SubGroup>.Success(subgroups.FirstOrDefault()!);
+                var subgroups = await _subGroupRepository.GetAllByCourseIdAsync(courseId) ?? new List<SubGroup>();
+                return Result<IEnumerable<SubGroup>>.Success(subgroups);
             }
             catch (Exception ex)
             {
-                return Result<SubGroup>.Failure($"An error occurred while retrieving subgroups: {ex.Message}");
+                return Result<IEnumerable<SubGroup>>.Failure($"Error retrieving subgroups: {ex.Message}");
             }
         }
 
@@ -114,42 +122,41 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var subgroup = await _crudRepository.GetByIdAsync(subGroupStudents.SubGroupId);
-                if (subgroup is null) throw new Exception("Subgroup not found");
-                var currentUserId = _userService.GetCurrentUserId();
-                if (currentUserId is null) throw new Exception("User not authorized");
-                var course = await _courseService.GetCourseById(subgroup.CourseId);
-                if (!course.IsSuccess || course.Data is null) throw new Exception("Course not found");
-                if (course.Data.OwnerId.ToString() != currentUserId) throw new Exception("User not authorized to update this subgroup");
-                var newStudents = new List<User?>();
-                foreach (var stEmail in subGroupStudents.StudentsEmails)
+                var subgroup = await _subGroupRepository.GetByIdAsync(subGroupStudents.SubGroupId);
+                if (subgroup is null)
+                    throw new Exception("Subgroup not found");
+
+                await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
+
+                var updatedStudents = new List<User>();
+                foreach (var email in subGroupStudents.StudentsEmails)
                 {
-                    var result = await _userService.GetUserByEmail(stEmail);
-                    if (result.IsSuccess) newStudents.Add(result.Data);
+                    var userResult = await _userService.GetUserByEmail(email);
+                    if (userResult.IsSuccess && userResult.Data is not null)
+                        updatedStudents.Add(userResult.Data);
                 }
-                subgroup.Students = newStudents.Where(s => s is not null).Select(s => s!).ToList();
-                _crudRepository.Update(subgroup);
+
+                subgroup.Students = updatedStudents;
+                _subGroupRepository.Update(subgroup);
                 await _unitOfWork.SaveChangesAsync();
+
                 return Result<SubGroup>.Success(subgroup);
             }
             catch (Exception ex)
             {
-                return Result<SubGroup>.Failure($"An error occurred while updating the subgroup: {ex.Message}");
+                return Result<SubGroup>.Failure($"Error updating subgroup: {ex.Message}");
             }
         }
 
-
-        /// REFACTOR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! might be for adding not updating(overwritting) 
         public async Task<Result<SubGroup>> AddToQueue(QueuePlaceCreationalDto queuePlace)
         {
             try
             {
-                var subgroup = await _crudRepository.GetByIdAsync(queuePlace.SubGroupId);
-                if (subgroup is null) throw new Exception("Subgroup not found");
-                var course = await _courseService.GetCourseById(subgroup.CourseId);
-                if (!course.IsSuccess || course.Data is null) throw new Exception("Course not found");
-                await IsCurrentUserOwnerOfCourse(course.Data.Id);
-                if (queuePlace.UserId.ToString() != _userService.GetCurrentUserId()) throw new Exception("User not authorized to add to queue in this subgroup");
+                var subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId);
+                if (subgroup is null)
+                    throw new Exception("Subgroup not found");
+
+                await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
 
                 subgroup.Queue.Add(new QueuePlace
                 {
@@ -158,35 +165,39 @@ namespace LabWorkOrganization.Application.Services
                     SubGroupId = queuePlace.SubGroupId,
                     SpecifiedTime = queuePlace.SpecifiedTime
                 });
+
                 await _unitOfWork.SaveChangesAsync();
                 return Result<SubGroup>.Success(subgroup);
             }
             catch (Exception ex)
             {
-                return Result<SubGroup>.Failure($"An error occurred while adding to queue: {ex.Message}");
+                return Result<SubGroup>.Failure($"Error adding to queue: {ex.Message}");
             }
         }
+
         public async Task<Result<SubGroup>> RemoveFromQueue(string queuePlaceId)
         {
             try
             {
-                var queuePlace = await _queuePlaceRepo.GetByIdAsync(queuePlaceId);
-                if (queuePlace is null) throw new Exception("Queue place not found");
-                var subgroup = await _crudRepository.GetByIdAsync(queuePlace.SubGroupId);
-                if (subgroup is null) throw new Exception("Subgroup not found");
-                var course = await _courseService.GetCourseById(subgroup.CourseId);
-                if (!course.IsSuccess || course.Data is null) throw new Exception("Course not found");
-                await IsCurrentUserOwnerOfCourse(course.Data.Id);
-                if (queuePlace.UserId.ToString() != _userService.GetCurrentUserId()) throw new Exception("User not authorized to remove from queue in this subgroup");
+                var queuePlace = await _queuePlaceRepository.GetByIdAsync(queuePlaceId);
+                if (queuePlace is null)
+                    throw new Exception("Queue place not found");
+
+                var subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId);
+                if (subgroup is null)
+                    throw new Exception("Subgroup not found");
+
+                await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
 
                 subgroup.Queue.Remove(queuePlace);
-                _queuePlaceRepo.Delete(queuePlace);
+                _queuePlaceRepository.Delete(queuePlace);
                 await _unitOfWork.SaveChangesAsync();
+
                 return Result<SubGroup>.Success(subgroup);
             }
             catch (Exception ex)
             {
-                return Result<SubGroup>.Failure($"An error occurred while removing from queue: {ex.Message}");
+                return Result<SubGroup>.Failure($"Error removing from queue: {ex.Message}");
             }
         }
     }

@@ -107,7 +107,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(c => c
-    .WithOrigins("https://localhost:7220")
+    .WithOrigins("http://localhost:4200", "https://localhost:7220")
     .AllowCredentials()
     .AllowAnyHeader()
     .AllowAnyMethod()

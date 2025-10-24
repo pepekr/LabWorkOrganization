@@ -79,32 +79,58 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                if (id.Equals(null)) throw new ArgumentNullException(nameof(id));
+                if (string.IsNullOrWhiteSpace(id))
+                    throw new ArgumentNullException(nameof(id));
+
                 var localCourse = await _crudRepository.GetByIdAsync(id);
 
+                // Якщо вимагаємо external
                 if (external)
                 {
-                    if (localCourse.ExternalId is null)
-                    {
-                        throw new Exception("Cant fetch external course, external id is undefined");
-                    }
                     var userId = _userService.GetCurrentUserId();
-
                     var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
                     if (!accessTokenResult.IsSuccess)
                         throw new Exception(accessTokenResult.ErrorMessage);
-                    var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
 
-                    return Result<Course?>.Success(await repo.GetByIdAsync(localCourse.ExternalId));
+                    var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
+                    var externalCourse = await repo.GetByIdAsync(id);
+
+                    if (externalCourse == null)
+                        throw new Exception("External course not found");
+
+                    // Якщо локального курсу немає — створюємо копію
+                    if (localCourse == null)
+                    {
+                        var newLocal = new Course
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            ExternalId = externalCourse.ExternalId ?? externalCourse.Id,
+                            OwnerExternalId = externalCourse.OwnerExternalId,
+                            Name = externalCourse.Name,
+                            OwnerId = userId,
+                            EndOfCourse = DateTime.UtcNow.AddMonths(3),
+                            LessonDuration = TimeSpan.FromHours(1)
+                        };
+
+                        await _crudRepository.AddAsync(newLocal);
+                        await _unitOfWork.SaveChangesAsync();
+                        localCourse = newLocal;
+                    }
+
+                    return Result<Course?>.Success(localCourse);
                 }
+
+                if (localCourse == null)
+                    return Result<Course?>.Failure("Course not found");
+
                 return Result<Course?>.Success(localCourse);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred while creating the course: {ex.Message}");
-                return Result<Course?>.Failure($"An error occurred while creating the course: {ex.Message}");
+                return Result<Course?>.Failure($"An error occurred while getting the course: {ex.Message}");
             }
         }
+
         public async Task<Result<IEnumerable<Course>>> GetAllCourses(bool isGetExternal = false)
         {
             try
