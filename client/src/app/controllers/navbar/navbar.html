@@ -1,0 +1,17 @@
+<header>
+  <p class="logo">LabWorkOrganization</p>
+
+  <div class="login-btns">
+    @if (auth$ | async; as auth) {
+      <button (click)="handleAuthClick(auth.isLoggedIn)">
+        {{ auth.isLoggedIn ? 'Logout' : 'Login' }}
+      </button>
+    }
+
+      @if (auth$ | async; as auth) {
+      <button (click)="handleAuthClick(auth.isLoggedIn)">
+        {{ auth.isLoggedIn ? 'Logout external' : 'Login external' }}
+      </button>
+    }
+  </div>
+</header>

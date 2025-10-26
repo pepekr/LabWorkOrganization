@@ -1,0 +1,36 @@
+header
+{
+    width: 100%;
+    background-color: rgb(24, 3, 11);
+    display:  flex ;
+    justify-content: space-between;
+    color: #fff;
+    box-sizing: border-box;
+    padding: 10px;
+    align-items: center;
+}
+.login-btns > button
+{
+    padding: 10px 15px ;
+    margin: 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease-out;
+    background: none;
+    color:#fff;
+    font-size: 1.05rem;
+
+}
+.login-btns > button:hover
+{
+    box-shadow: 5px 5px 7px rgba(255, 255, 255, 0.6);
+}
+.logo
+{
+    margin: 5px;
+}
+*
+{
+    margin: 0;
+    padding: 0;
+}
