@@ -56,5 +56,20 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
+        [HttpGet("isLoggedIn")]
+        public async Task<IActionResult> IsLoggedIn()
+        {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var email = User.Claims.FirstOrDefault(c =>
+     c.Type == "email" || c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+
+                if (!string.IsNullOrEmpty(email))
+                {
+                    return Ok(new { isLoggedIn = true, email });
+                }
+            }
+            return Unauthorized(new { isLoggedIn = false, message = "User is not logged in" });
+        }
     }
 }
