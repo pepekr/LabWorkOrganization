@@ -8,13 +8,13 @@ namespace LabWorkOrganization.Application.Services
 {
     public class CourseService : ICourseService
     {
-        private readonly ICrudRepository<Course> _crudRepository;
+        private readonly IUserScopedRepository<Course> _crudRepository;
         //private readonly IExternalCrudRepo<Course> _externalCrudRepository;
         private readonly IExternalCrudRepoFactory _externalCrudFactory;
         private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IExternalTokenService _externalTokenService;
-        public CourseService(ICrudRepository<Course> crudRepository, IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, IUserService userService, IExternalTokenService IExternalTokenService)
+        public CourseService(IUserScopedRepository<Course> crudRepository, IUnitOfWork IUnitOfWork, IExternalCrudRepoFactory IExternalCrudFactory, IUserService userService, IExternalTokenService IExternalTokenService)
         {
             _crudRepository = crudRepository;
             _unitOfWork = IUnitOfWork;
@@ -116,7 +116,10 @@ namespace LabWorkOrganization.Application.Services
                         await _unitOfWork.SaveChangesAsync();
                         localCourse = newLocal;
                     }
-
+                    if (localCourse.OwnerId != userId)
+                    {
+                        return Result<Course?>.Failure("Access denied to the course");
+                    }
                     return Result<Course?>.Success(localCourse);
                 }
 
@@ -155,6 +158,40 @@ namespace LabWorkOrganization.Application.Services
                 return Result<IEnumerable<Course>>.Failure($"An error occurred while creating the course: {ex.Message}");
             }
         }
+        public async Task<Result<IEnumerable<Course>>> GetAllCoursesByUserAsync(bool includeExternal = false)
+        {
+            try
+            {
+                var userId = _userService.GetCurrentUserId();
+                var internalCourses = await _crudRepository.GetAllByUserIdAsync(userId)
+                                       ?? Enumerable.Empty<Course>();
+
+                IEnumerable<Course> userCourses = internalCourses;
+
+                if (includeExternal)
+                {
+                    var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                        throw new Exception(accessTokenResult.ErrorMessage);
+
+
+                    var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
+                    var externalCourses = await repo.GetAllAsync() ?? Enumerable.Empty<Course>();
+
+
+                    userCourses = internalCourses.Concat(externalCourses);
+                }
+
+                return Result<IEnumerable<Course>>.Success(userCourses);
+            }
+            catch (Exception ex)
+            {
+                var message = $"An error occurred while retrieving user courses: {ex.Message}";
+                Console.WriteLine(message);
+                return Result<IEnumerable<Course>>.Failure(message);
+            }
+        }
+
         public async Task<Result<Course>> UpdateCourse(Course course, bool updateExternal = false)
         {
             try
@@ -164,12 +201,21 @@ namespace LabWorkOrganization.Application.Services
                 {
                     throw new ArgumentException(string.Join("; ", errors));
                 }
-
+                var userId = _userService.GetCurrentUserId();
+                var courseDb = await _crudRepository.GetByIdAsync(course.Id);
+                if (courseDb == null)
+                {
+                    return Result<Course>.Failure("Course not found");
+                }
+                if (courseDb.OwnerId != userId)
+                {
+                    return Result<Course>.Failure("Access denied to the course");
+                }
                 if (updateExternal)
                 {
                     if (course.ExternalId is not null)
                     {
-                        var userId = _userService.GetCurrentUserId();
+
                         var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
                         if (!accessTokenResult.IsSuccess)
                             throw new Exception(accessTokenResult.ErrorMessage);
@@ -177,6 +223,7 @@ namespace LabWorkOrganization.Application.Services
                         await repo.UpdateAsync(course, course.ExternalId);
                     }
                 }
+
                 _crudRepository.Update(course);
                 await _unitOfWork.SaveChangesAsync();
                 return Result<Course>.Success(course);
@@ -193,7 +240,12 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
+                var userId = _userService.GetCurrentUserId();
                 var course = await _crudRepository.GetByIdAsync(id);
+                if (course.OwnerId != userId)
+                {
+                    return Result<Course>.Failure("Access denied to the course");
+                }
                 if (course != null)
                 {
                     _crudRepository.Delete(course);

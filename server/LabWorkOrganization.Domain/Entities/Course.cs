@@ -1,8 +1,9 @@
+using LabWorkOrganization.Domain.Intefaces;
 using System.ComponentModel.DataAnnotations;
 
 namespace LabWorkOrganization.Domain.Entities
 {
-    public class Course
+    public class Course : IHasOwnerId
     {
         [Key]
         public string Id { get; set; }

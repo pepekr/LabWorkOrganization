@@ -16,16 +16,28 @@ namespace LabWorkOrganization.API.Controllers
             _courseService = courseService;
         }
 
-        [HttpGet("getAll")]
-        public async Task<IActionResult> GetAllCourses()
+        //[HttpGet("getAll")]
+        //public async Task<IActionResult> GetAllCourses()
+        //{
+        //    var result = await _courseService.GetAllCourses();
+        //    if (!result.IsSuccess)
+        //    {
+        //        return BadRequest(result.ErrorMessage);
+        //    }
+        //    return Ok(result.Data);
+        //}
+        [HttpGet("getAllByUserId")]
+        public async Task<IActionResult> GetAllCourses([FromQuery] bool isGetExternal = false)
         {
-            var result = await _courseService.GetAllCourses();
+            var result = await _courseService.GetAllCoursesByUserAsync(isGetExternal);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
             }
             return Ok(result.Data);
         }
+
+
         [HttpGet("getById/{id}")]
         public async Task<IActionResult> GetCourseById([FromRoute] string id, [FromQuery] bool isExternalCourse)
         {

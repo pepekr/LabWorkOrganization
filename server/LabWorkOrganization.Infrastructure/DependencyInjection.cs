@@ -19,6 +19,7 @@ namespace LabWorkOrganization.Infrastructure
             services.AddScoped(typeof(ICrudRepository<>), typeof(GenericRepo<>));
             services.AddScoped(typeof(ICourseScopedRepository<>), typeof(CourseScopedRepository<>));
             services.AddScoped(typeof(ISubGroupScopedRepository<>), typeof(SubGroupScopedRepository<>));
+            services.AddScoped(typeof(IUserScopedRepository<>), typeof(UserScopedRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddAutoMapper(typeof(DependencyInjection).Assembly);
 
