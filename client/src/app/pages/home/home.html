@@ -1,1 +1,39 @@
-<p>home works!</p>
+<div class="course-list">
+  <h2>My Courses</h2>
+
+  <button class="create-btn" (click)="openCreateCourse()">+ Create New Course</button>
+
+  <!-- Create Course Modal -->
+  <div *ngIf="showCreateCourse" class="modal">
+    <div class="modal-content">
+      <app-create-course-component (close)="closeCreateCourse($event)"></app-create-course-component>
+    </div>
+  </div>
+
+  <!-- Update Course Modal -->
+  <div *ngIf="showUpdateCourse && selectedCourse" class="modal">
+    <div class="modal-content">
+      <app-update-course-component
+        [course]="selectedCourse"
+        (close)="closeUpdateCourse($event)">
+      </app-update-course-component>
+    </div>
+  </div>
+
+  <div *ngIf="loading">Loading courses...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <ul *ngIf="!loading && courses.length > 0">
+    <li *ngFor="let course of courses">
+      <h3>{{ course.name }}</h3>
+      <p>Lesson Duration: {{ course.lessonDuration }}</p>
+      <p>End of Course: {{ course.endOfCourse | date:'mediumDate' }}</p>
+      <button (click)="deleteCourse(course.id!, course.externalId ? true : false)">
+        Delete
+      </button>
+      <button (click)="openUpdateCourse(course)">Update</button>
+    </li>
+  </ul>
+
+  <div *ngIf="!loading && courses.length === 0">No courses available.</div>
+</div>

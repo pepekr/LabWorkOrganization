@@ -1,0 +1,103 @@
+.create-course-form {
+  width: 400px;
+  /* background: #ffffff; */
+  padding: 20px 25px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0,0,0,0.15);
+  position: relative;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+h2 {
+  margin-top: 0;
+  color: #1d7ade;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+input[type="text"],
+input[type="date"] {
+  width: 100%;
+  padding: 9px 10px;
+  margin-top: 6px;
+  border: 1px solid #b9b9b9;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus {
+  border-color: #1d7ade;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 10px;
+  background: #1d7ade;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: background 0.2s;
+}
+
+button[type="submit"]:hover {
+  background-color: #1764b3;
+}
+
+button[type="submit"]:disabled {
+  background-color: #7daede;
+  cursor: not-allowed;
+}
+
+/* Close Button */
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #555;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+/* Messages */
+.message {
+  margin-top: 12px;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.success {
+  color: #0a9e28;
+}
+
+.error {
+  color: #d12a2a;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
