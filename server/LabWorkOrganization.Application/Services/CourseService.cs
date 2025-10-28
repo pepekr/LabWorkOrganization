@@ -192,7 +192,7 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        public async Task<Result<Course>> UpdateCourse(Course course, bool updateExternal = false)
+        public async Task<Result<Course>> UpdateCourse(CourseUpdateDto course, bool updateExternal = false)
         {
             try
             {
@@ -211,22 +211,25 @@ namespace LabWorkOrganization.Application.Services
                 {
                     return Result<Course>.Failure("Access denied to the course");
                 }
+                courseDb.Name = course.Name;
+                courseDb.LessonDuration = course.LessonDuration;
+                courseDb.EndOfCourse = course.EndOfCourse;
                 if (updateExternal)
                 {
-                    if (course.ExternalId is not null)
+                    if (courseDb.ExternalId is not null)
                     {
 
                         var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
                         if (!accessTokenResult.IsSuccess)
                             throw new Exception(accessTokenResult.ErrorMessage);
                         var repo = _externalCrudFactory.Create<Course>("https://classroom.googleapis.com/v1/courses");
-                        await repo.UpdateAsync(course, course.ExternalId);
+                        await repo.UpdateAsync(courseDb, courseDb.ExternalId);
                     }
                 }
 
-                _crudRepository.Update(course);
+                _crudRepository.Update(courseDb);
                 await _unitOfWork.SaveChangesAsync();
-                return Result<Course>.Success(course);
+                return Result<Course>.Success(courseDb);
             }
             catch (Exception ex)
             {

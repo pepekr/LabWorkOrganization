@@ -11,6 +11,6 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<IEnumerable<Course>>> GetAllCourses(bool isGetExternal = false);
         Task<Result<Course?>> GetCourseById(string id, bool external = false);
         Task<Result<IEnumerable<Course>>> GetAllCoursesByUserAsync(bool isGetExternal = false);
-        Task<Result<Course>> UpdateCourse(Course course, bool updateExternal = false);
+        Task<Result<Course>> UpdateCourse(CourseUpdateDto course, bool updateExternal = false);
     }
 }

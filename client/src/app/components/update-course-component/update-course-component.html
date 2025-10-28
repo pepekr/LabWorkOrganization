@@ -1,21 +1,28 @@
 <div class="create-course-form">
   <h2>Update Course</h2>
   <button type="button" class="close-btn" (click)="cancel()">× Close</button>
-
+  
   <form #courseForm="ngForm" (ngSubmit)="submitForm(courseForm)">
     <div class="form-group">
       <label for="name">Course Name</label>
-      <input type="text" id="name" name="name" required [(ngModel)]="updatedCourse.name" [ngModelOptions]="{standalone: true}" />
+      <input type="text" id="name" name="name" required
+             [(ngModel)]="updatedCourse.name"
+             [ngModelOptions]="{standalone: true}" />
     </div>
 
     <div class="form-group">
       <label for="lessonDuration">Lesson Duration (HH:MM:SS)</label>
-      <input type="text" id="lessonDuration" name="lessonDuration" required pattern="^\\d{2}:\\d{2}:\\d{2}$" [(ngModel)]="updatedCourse.lessonDuration" [ngModelOptions]="{standalone: true}" />
+      <input type="text" id="lessonDuration" name="lessonDuration" required
+             pattern="^\d{2}:\d{2}:\d{2}$"
+             [(ngModel)]="updatedCourse.lessonDuration"
+             [ngModelOptions]="{standalone: true}" />
     </div>
 
     <div class="form-group">
       <label for="endOfCourse">End of Course</label>
-      <input type="date" id="endOfCourse" name="endOfCourse" required [(ngModel)]="endOfCourseString" [ngModelOptions]="{standalone: true}" />
+      <input type="date" id="endOfCourse" name="endOfCourse" required
+             [(ngModel)]="endOfCourseString"
+             [ngModelOptions]="{standalone: true}" />
     </div>
 
     <button type="submit" [disabled]="loading">Update Course</button>

@@ -65,11 +65,16 @@ export class Home implements OnInit {
     if (courseCreated) this.fetchCourses();
   }
 
-  openUpdateCourse(course: Course) {
-    this.selectedCourse = course;
-    this.showUpdateCourse = true;
+openUpdateCourse(course: Course) {
+  // Ensure the course object has the ID
+  if (!course.id) {
+    console.error('Cannot update course without ID', course);
+    return;
   }
-
+  console.log(course)
+  this.selectedCourse = course;
+  this.showUpdateCourse = true;
+}
   closeUpdateCourse(updated: boolean) {
     this.showUpdateCourse = false;
     this.selectedCourse = null;

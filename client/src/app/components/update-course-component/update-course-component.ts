@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Course, CourseAlterDto, CourseService } from "../../services/CourseService/course-service";
@@ -10,18 +10,25 @@ import { Course, CourseAlterDto, CourseService } from "../../services/CourseServ
   imports: [CommonModule, FormsModule],
   standalone: true
 })
-export class UpdateCourseComponent {
+export class UpdateCourseComponent implements OnChanges {
   @Input() course!: Course;
   @Output() close = new EventEmitter<boolean>();
 
-  updatedCourse: Course = { ...this.course };
-  endOfCourseString: string = this.dateToInputString(this.updatedCourse.endOfCourse);
-
+  updatedCourse!: Course;
+  endOfCourseString: string = '';
   loading: boolean = false;
   successMessage: string = '';
   errorMessage: string = '';
 
   constructor(private courseService: CourseService) {}
+
+  // Called whenever @Input() changes
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['course'] && this.course) {
+      this.updatedCourse = { ...this.course };
+      this.endOfCourseString = this.dateToInputString(this.updatedCourse.endOfCourse);
+    }
+  }
 
   dateToInputString(date: Date): string {
     const d = new Date(date);
@@ -38,15 +45,23 @@ export class UpdateCourseComponent {
     if (!form.valid) return;
 
     this.updatedCourse.endOfCourse = this.inputStringToDate(this.endOfCourseString);
-
     this.loading = true;
     this.successMessage = '';
     this.errorMessage = '';
 
     const alterDto: CourseAlterDto = {
-      course: this.updatedCourse,
+      course: {
+        id: this.updatedCourse.id,
+        name: this.updatedCourse.name,
+        lessonDuration: this.updatedCourse.lessonDuration,
+        endOfCourse: this.updatedCourse.endOfCourse,
+        externalId: this.updatedCourse.externalId,
+        ownerId: this.updatedCourse.ownerId
+      },
       useExternal: !!this.updatedCourse.externalId
     };
+
+    console.log("Course to update", alterDto.course);
 
     this.courseService.updateCourse(this.updatedCourse.id!, alterDto).subscribe({
       next: () => {
@@ -55,7 +70,7 @@ export class UpdateCourseComponent {
         setTimeout(() => this.close.emit(true), 1000);
       },
       error: (err) => {
-        console.error(err);
+        console.error(err.error);
         this.errorMessage = 'Failed to update course.';
         this.loading = false;
       }
