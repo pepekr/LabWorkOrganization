@@ -9,11 +9,14 @@ namespace LabWorkOrganization.API.Controllers
     public class SubGroupController : ControllerBase
     {
         private readonly ISubgroupService _subGroupService;
+
         public SubGroupController(ISubgroupService subGroupService)
         {
             _subGroupService = subGroupService;
         }
 
+        // POST: api/courses/{courseId}/subgroups/create
+        // Creates a new subgroup under a specific course
         [HttpPost("create")]
         public async Task<IActionResult> CreateSubgroup([FromBody] SubGroupCreationalDto subgroup)
         {
@@ -24,6 +27,9 @@ namespace LabWorkOrganization.API.Controllers
             }
             return Ok(result.Data);
         }
+
+        // GET: api/courses/{courseId}/subgroups/getAll
+        // Retrieves all subgroups associated with a given course
         [HttpGet("getAll")]
         public async Task<IActionResult> GetAllSubgroupsByCourseId([FromRoute] string courseId)
         {
@@ -35,6 +41,8 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
+        // POST: api/courses/{courseId}/subgroups/{subGroupId}/queue/add
+        // Adds a new student/place to a subgroup queue
         [HttpPost("{subGroupId}/queue/add")]
         public async Task<IActionResult> AddToQueue([FromRoute] string subGroupId, [FromBody] QueuePlaceCreationalDto queuePlace)
         {
@@ -46,6 +54,8 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
+        // POST: api/courses/{courseId}/subgroups/{subGroupId}/queue/remove
+        // Removes a student/place from a subgroup queue
         [HttpPost("{subGroupId}/queue/remove")]
         public async Task<IActionResult> RemoveFromQueue([FromRoute] string subGroupId, [FromBody] string queuePlaceId)
         {

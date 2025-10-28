@@ -7,37 +7,46 @@ using System.Text;
 
 namespace LabWorkOrganization.Infrastructure.Auth
 {
+    // Service for generating and validating JWT tokens for internal authentication
     public class JwtTokenManager : IJwtTokenManager
     {
         public JwtTokenManager() { }
+
+        // Generates a JWT token containing email, id, and optional external service id
         public string GenerateJwtToken(string email, string id, string? externalServiceId, int expirationInMinutes)
         {
+            // Fetch secret key from environment variables
             string secretKey = Environment.GetEnvironmentVariable("JWT_SECRET")!;
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256); // HMAC SHA256 signing
+
+            // Define token payload (claims) and expiration
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new System.Security.Claims.ClaimsIdentity(new[]
+                Subject = new ClaimsIdentity(new[]
                 {
-                    new System.Security.Claims.Claim("email", email),
-                    new System.Security.Claims.Claim("id", id),
-                    new System.Security.Claims.Claim("externalId", externalServiceId ?? string.Empty)
+                    new Claim("email", email),
+                    new Claim("id", id),
+                    new Claim("externalId", externalServiceId ?? string.Empty) // Empty string if external ID is null
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(expirationInMinutes),
                 SigningCredentials = credentials,
-                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
-                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"), // Intended recipients
+                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") // Token issuer
             };
+
             var tokenHandler = new JsonWebTokenHandler();
-            string token = tokenHandler.CreateToken(tokenDescriptor);
+            string token = tokenHandler.CreateToken(tokenDescriptor); // Create JWT
             return token;
         }
+
+        // Validates a JWT token and returns ClaimsPrincipal if valid
         public ClaimsPrincipal? ValidateToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")!);
 
-
+            // Set validation parameters for issuer, audience, signature, and lifetime
             var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -50,13 +59,10 @@ namespace LabWorkOrganization.Infrastructure.Auth
                 IssuerSigningKey = new SymmetricSecurityKey(key),
 
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero // No tolerance for expiration
             }, out SecurityToken validatedToken);
 
-            return principal;
-
-
+            return principal; // Return principal containing claims from the token
         }
-
     }
 }
