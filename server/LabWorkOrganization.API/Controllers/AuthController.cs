@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LabWorkOrganization.API.Controllers
 {
     [Route("api/auth")]
+    [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -24,7 +25,7 @@ namespace LabWorkOrganization.API.Controllers
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Strict,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddMinutes(60)
                 };
 
@@ -32,8 +33,8 @@ namespace LabWorkOrganization.API.Controllers
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(1)
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddDays(10)
                 };
 
                 Response.Cookies.Append("access_token", result.Data.AccessToken, accessCookieOptions);
@@ -49,15 +50,34 @@ namespace LabWorkOrganization.API.Controllers
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegistrationDto)
         {
             var result = await _authService.HandleRegistration(userRegistrationDto);
-            if (!result.IsSuccess)
+            if (result.IsSuccess && result.Data is not null)
             {
-                return BadRequest(result.ErrorMessage);
+                var accessCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddMinutes(60)
+                };
+
+                var refreshCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddDays(10)
+                };
+
+                Response.Cookies.Append("access_token", result.Data.AccessToken, accessCookieOptions);
+                Response.Cookies.Append("refresh_token", result.Data.RefreshToken, refreshCookieOptions);
+
+                return Ok(new { message = "Login successful" });
             }
-            return Ok(result.Data);
+            return BadRequest(result.ErrorMessage);
         }
 
         [HttpGet("isLoggedIn")]
-        public async Task<IActionResult> IsLoggedIn()
+        public IActionResult IsLoggedIn()
         {
             if (User.Identity?.IsAuthenticated == true)
             {
@@ -70,6 +90,15 @@ namespace LabWorkOrganization.API.Controllers
                 }
             }
             return Unauthorized(new { isLoggedIn = false, message = "User is not logged in" });
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Console.WriteLine("Logging out user...");
+            Response.Cookies.Delete("access_token", new CookieOptions { Path = "/", Secure = true });
+            Response.Cookies.Delete("refresh_token", new CookieOptions { Path = "/", Secure = true });
+            return Ok(new { message = "Logout successful" });
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Auth.OAuth2.Responses;
 using LabWorkOrganization.Application.Dtos;
 using LabWorkOrganization.Domain.Utilities;
 using System.Security.Claims;
@@ -10,5 +10,7 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<TokenResponse> GetGoogleTokensAsync(string code);
         Task<Result<JWTTokenDto>> HandleExternalAuth(string code, ClaimsPrincipal? claimsPrincipal);
         string RedirectUri();
+        Task<Result<string>> HandleExternalLogout();
+        Task<Result<bool>> IsLoggedIn();
     }
 }

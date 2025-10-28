@@ -133,5 +133,23 @@ namespace LabWorkOrganization.Application.Services
                 return Result<ExternalToken>.Failure($"An error occurred while refreshing token: {ex.Message}");
             }
         }
+
+        public async Task<Result<bool>> RemoveTokenAsync(string userId, string apiName)
+        {
+            try
+            {
+                var tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, apiName);
+                if (tokenEntity is null)
+                    throw new Exception("Token not found");
+
+                _tokenStorage.RemoveToken(tokenEntity);
+                await _unitOfWork.SaveChangesAsync();
+                return Result<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                return Result<bool>.Failure(ex.Message);
+            }
+        }
     }
 }

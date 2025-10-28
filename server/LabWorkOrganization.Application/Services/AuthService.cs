@@ -79,6 +79,7 @@ namespace LabWorkOrganization.Application.Services
 
         public async Task<Result<JWTTokenDto>> HandleRegistration(UserRegisterDto user)
         {
+            Console.WriteLine("Registration working");
             try
             {
                 var userDbResult = await _userService.GetUserByEmail(user.Email);

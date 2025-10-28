@@ -138,6 +138,33 @@ namespace LabWorkOrganization.Application.Services
             return authorizationUrl;
 
         }
+        public async Task<Result<string>> HandleExternalLogout()
+        {
+            try
+            {
+                await _externalTokenService.RemoveTokenAsync(_currentUserId, "Google");
+                await _unitOfWork.SaveChangesAsync();
+                return Result<string>.Success("External logout successful");
+            }
+            catch (Exception ex)
+            {
+                return Result<string>.Failure($"An error occured during external logout: {ex.Message}");
+            }
+        }
+        public async Task<Result<bool>> IsLoggedIn()
+        {
+            try
+            {
+                var token = await _externalTokenService.GetAccessTokenFromDbAsync(_currentUserId, "Google");
+                if (token is null) throw new Exception("No external token found");
+                if (!token.IsSuccess) throw new Exception(token.ErrorMessage);
+                return Result<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                return Result<bool>.Failure($"An error occured during checking external login status: {ex.Message}");
+            }
+        }
     }
 
 }

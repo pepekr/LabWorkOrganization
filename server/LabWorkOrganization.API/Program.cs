@@ -1,5 +1,6 @@
 using DotNetEnv;
 using LabWorkOrganization.API;
+using LabWorkOrganization.Application.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -107,11 +108,58 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(c => c
-    .WithOrigins("http://localhost:4200", "https://localhost:7220")
+    .WithOrigins("http://localhost:4200", "https://localhost:4200", "https://localhost:7220")
     .AllowCredentials()
     .AllowAnyHeader()
     .AllowAnyMethod()
 );
+app.Use(async (context, next) =>
+{
+    var accessToken = context.Request.Cookies["access_token"];
+    var refreshToken = context.Request.Cookies["refresh_token"];
+
+    // Only refresh if access token is missing or expired, and we have a refresh token
+    if (string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
+    {
+        Console.WriteLine("[AUTH REFRESH] 🌀 Attempting token refresh...");
+
+        var refreshService = context.RequestServices.GetRequiredService<IAuthService>(); // whatever service has HandleRefresh
+        var refreshResult = await refreshService.HandleRefresh(refreshToken);
+
+        if (refreshResult.IsSuccess && refreshResult.Data is not null)
+        {
+            var newAccess = refreshResult.Data.AccessToken;
+            var newRefresh = refreshResult.Data.RefreshToken;
+
+            // Set new cookies
+            context.Response.Cookies.Append("access_token", newAccess, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None, // adjust if needed (Strict/Lax/None)
+                Expires = DateTime.UtcNow.AddMinutes(60)
+            });
+
+            context.Response.Cookies.Append("refresh_token", newRefresh, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(10)
+            });
+
+            Console.WriteLine("[AUTH REFRESH] ✅ Tokens refreshed successfully.");
+            // inject new token into the context for JwtBearer to pick up
+            context.Request.Headers["Authorization"] = $"Bearer {newAccess}";
+        }
+        else
+        {
+            Console.WriteLine($"[AUTH REFRESH] ❌ Token refresh failed: {refreshResult.ErrorMessage}");
+        }
+    }
+
+    await next();
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
