@@ -1,0 +1,34 @@
+<main>
+<h2 class="form-title">Login</h2>
+
+<form class="form" [formGroup]="form" (ngSubmit)="submit()">
+
+  <div class="form-group">
+    <input type="email" formControlName="email" placeholder=" " />
+    <label>Email</label>
+    <div class="validation" *ngIf="form.controls.email.invalid && form.controls.email.touched">
+      Valid email required
+    </div>
+  </div>
+
+  <div class="form-group">
+    <input type="password" formControlName="password" placeholder=" " />
+    <label>Password</label>
+    <div class="validation" *ngIf="form.controls.password.invalid && form.controls.password.touched">
+      Password required
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button type="submit" [disabled]="form.invalid">Login</button>
+  </div>
+
+  <p *ngIf="errorMessage" style="color: red;">{{ errorMessage }}</p>
+
+</form>
+
+<p class="register-text">
+  Don't have an account?
+  <a (click)="navigateToRegister()">Register</a>
+</p>
+</main>

@@ -1,0 +1,67 @@
+<main>
+  <h2 class="form-title">Register</h2>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()">
+
+    <!-- NAME -->
+    <div class="form-group">
+      <input type="text" formControlName="name" placeholder=" " />
+      <label>Name</label>
+      <div class="validation" *ngIf="f.name.invalid && (f.name.touched || f.name.dirty)">
+        Name is required
+      </div>
+    </div>
+
+    <!-- EMAIL -->
+    <div class="form-group">
+      <input type="email" formControlName="email" placeholder=" " />
+      <label>Email</label>
+      <div class="validation" *ngIf="f.email.invalid && (f.email.touched || f.email.dirty)">
+        Valid email required
+      </div>
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="form-group">
+      <input type="password" formControlName="password" placeholder=" " />
+      <label>Password</label>
+      <div class="validation" *ngIf="f.password.invalid && (f.password.touched || f.password.dirty)">
+        Password must be at least 6 characters
+      </div>
+    </div>
+
+    <!-- CONFIRM PASSWORD -->
+    <div class="form-group">
+      <input type="password" formControlName="confirmPassword" placeholder=" " />
+      <label>Confirm Password</label>
+      <div
+        class="validation"
+        *ngIf="f.confirmPassword.errors?.['passwordMismatch'] && (f.confirmPassword.touched || f.confirmPassword.dirty)"
+      >
+        Passwords do not match
+      </div>
+      <div
+        class="validation "
+        *ngIf="f.confirmPassword.errors?.['required'] && (f.confirmPassword.touched || f.confirmPassword.dirty)"
+      >
+        Confirm password is required
+      </div>
+    </div>
+
+    <!-- SERVER ERROR -->
+   
+    <!-- SUBMIT BUTTON -->
+    <div class="buttons">
+      <button type="submit">Register</button>
+    </div>
+     <div *ngIf="errorMessage" class="validation main-error" style="text-align:center;">
+      {{ errorMessage }}
+    </div>
+
+  </form>
+
+  <p class="register-text">
+    Already have an account?
+    <a (click)="navigateToLogin()">Login</a>
+  </p>
+</main>

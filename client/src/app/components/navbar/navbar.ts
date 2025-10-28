@@ -1,45 +1,74 @@
-import { Component } from '@angular/core';
-import { AuthService } from '../../services/AuthService/auth-service';
-import { Observable } from 'rxjs';
-import { CommonModule } from '@angular/common';
 
+import { Component } from '@angular/core';
+import { Observable, combineLatest, map } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/AuthService/auth-service';
+import { ExternalAuth } from '../../services/ExternalAuth/external-auth';
+
+export interface AuthStatus {
+  isLoggedInLocal: boolean;
+  isLoggedInExternal: boolean;
+  email?: string;
+}
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css'],
-  standalone: true, // needed to use `imports` in Angular 15+
+  standalone: true,
   imports: [CommonModule],
 })
 export class Navbar {
-  auth$: Observable<{ isLoggedIn: boolean; email?: string }>;
+  authAuthorized$: Observable<AuthStatus>;
 
-  constructor(private auth: AuthService) {
-    this.auth$ = this.auth.authorized$;
+  constructor(
+    private auth: AuthService,
+    private externalAuth: ExternalAuth,
+    private router: Router
+  ) {
+    this.authAuthorized$ = combineLatest([
+      this.auth.authorized$,
+      this.externalAuth.authorized$
+    ]).pipe(
+      map(([local, external]) => ({
+        isLoggedInLocal: local.isLoggedInLocal,
+        isLoggedInExternal: external.isLoggedInExternal,
+        email: local.email
+      }))
+    );
   }
 
-  handleAuthClick(isLoggedIn: boolean) {
-    if (isLoggedIn) {
-      this.logout();
-    } else {
-      this.login();
-    }
+  handleAuthClick(isLoggedInLocal: boolean) {
+    isLoggedInLocal ? this.logout() : this.login();
   }
 
   private login() {
-    console.log('Executing login logic... 🚀');
-    this.auth.refreshAuth();
+    this.router.navigate(['login']);
   }
+
   private logout() {
-    console.log('Executing logout logic... 👋');
-    this.auth.refreshAuth();
+    this.auth.logout().subscribe(() => {
+      this.auth.refreshAuth();
+      this.externalAuth.refreshAuth();
+      this.router.navigate(['login']);
+    });
   }
-  handleExternalAuthClick(isLoggedIn: boolean) {
-    if (isLoggedIn) {
-      this.logoutExternal();
-    } else {
-      this.loginExternal();
-    }
+
+  handleExternalAuthClick(isLoggedInExternal: boolean) {
+    isLoggedInExternal ? this.logoutExternal() : this.loginExternal();
   }
-  private logoutExternal() {}
-  private loginExternal() {}
+
+  private logoutExternal() {
+    this.externalAuth.handleExternalLogout().subscribe(() => {
+      this.auth.refreshAuth();
+      this.externalAuth.refreshAuth();
+      this.router.navigate(['login']);
+    });
+  }
+
+private loginExternal() {
+  const returnUrl = this.router.url;
+  this.externalAuth.loginWithGoogle(returnUrl);
+}
+
 }
