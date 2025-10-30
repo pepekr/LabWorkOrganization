@@ -6,24 +6,21 @@ import { LabTaskCreationalDto, LabTaskService } from "../../services/LabTaskServ
 @Component({
   selector: 'app-create-task-component',
   templateUrl: './create-task-component.html',
-  styleUrls: ['./create-task-component.css'], // Використаємо стилі від 'create-course'
+  styleUrls: ['./create-task-component.css'],
   imports: [CommonModule, FormsModule],
   standalone: true
 })
 export class CreateTaskComponent {
-  // Компонент повинен знати, для якого курсу він створює завдання
   @Input() courseId!: string;
-  @Output() close = new EventEmitter<boolean>(); // Повідомляє батька про закриття
+  @Output() close = new EventEmitter<boolean>();
 
-  // Модель форми на основі DTO
   task: Omit<LabTaskCreationalDto, 'courseId' | 'dueDate'> = {
     title: '',
     isSentRequired: false,
-    timeLimitPerStudent: '00:30:00', // "HH:MM:SS"
+    timeLimitPerStudent: '00:30:00',
     useExternal: false
   };
 
-  // Використовуємо рядок для input[type=date]
   dueDateString: string = this.dateToInputString(new Date());
 
   loading: boolean = false;
@@ -32,14 +29,14 @@ export class CreateTaskComponent {
 
   constructor(private labTaskService: LabTaskService) {}
 
-  // --- Хелпери для дати ---
+  // --- Date helpers ---
   dateToInputString(date: Date): string {
     return new Date(date).toISOString().split('T')[0];
   }
 
   inputStringToDate(dateStr: string): Date {
-    // Встановлюємо час за замовчуванням, щоб уникнути проблем з часовими зонами
-    return new Date(dateStr + 'T12:00:00Z');
+    // Keep this simple — prevents timezone issues
+    return new Date(dateStr + 'T00:00:00');
   }
   // --- ---
 
@@ -50,18 +47,18 @@ export class CreateTaskComponent {
     this.successMessage = '';
     this.errorMessage = '';
 
-    // Збираємо повний DTO
     const fullTaskDto: LabTaskCreationalDto = {
       ...this.task,
       dueDate: this.inputStringToDate(this.dueDateString),
       courseId: this.courseId
     };
 
+    console.log('Creating task:', fullTaskDto);
+
     this.labTaskService.createTask(fullTaskDto).subscribe({
       next: () => {
         this.successMessage = 'Task created successfully!';
         this.loading = false;
-        // Повідомити батьківський компонент про успіх і закрити вікно
         setTimeout(() => this.close.emit(true), 1000);
       },
       error: (err) => {
@@ -73,6 +70,6 @@ export class CreateTaskComponent {
   }
 
   cancel() {
-    this.close.emit(false); // Повідомити про скасування
+    this.close.emit(false);
   }
 }
