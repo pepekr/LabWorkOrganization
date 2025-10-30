@@ -1,0 +1,35 @@
+<div class="create-course-form">
+  <h2>Update Task</h2>
+  <button type="button" class="close-btn" (click)="cancel()">×</button>
+
+  <form *ngIf="updatedTask" #taskForm="ngForm" (ngSubmit)="submitForm(taskForm)">
+
+    <div class="form-group">
+      <label for="title">Task Title</label>
+      <input type="text" id="title" name="title" required [(ngModel)]="updatedTask.title" />
+    </div>
+
+    <div class="form-group">
+      <label for="timeLimit">Time Limit (HH:MM:SS)</label>
+      <input type="text" id="timeLimit" name="timeLimit" required
+             pattern="^\\d{2}:\\d{2}:\\d{2}$"
+             [(ngModel)]="updatedTask.timeLimitPerStudent" />
+    </div>
+
+    <div class="form-group">
+      <label for="dueDate">Due Date</label>
+      <input type="date" id="dueDate" name="dueDate" required [(ngModel)]="dueDateString" />
+    </div>
+
+    <div class="form-group">
+      <label>
+        <input type="checkbox" name="isSentRequired" [(ngModel)]="updatedTask.isSentRequired" /> Is Submission Required
+      </label>
+    </div>
+
+    <button type="submit" [disabled]="loading || !taskForm.valid">Update Task</button>
+
+    <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  </form>
+</div>

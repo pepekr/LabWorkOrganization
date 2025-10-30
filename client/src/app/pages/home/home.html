@@ -25,7 +25,10 @@
 
   <ul *ngIf="!loading && courses.length > 0">
     <li *ngFor="let course of courses">
-      <h3>{{ course.name }}</h3>
+
+      <h3 (click)="navigateToCourse(course.id!)" style="cursor: pointer; color: #1d7ade;">
+        {{ course.name }}
+      </h3>
       <p>Lesson Duration: {{ course.lessonDuration }}</p>
       <p>End of Course: {{ course.endOfCourse | date:'mediumDate' }}</p>
       <button (click)="deleteCourse(course.id!, course.externalId ? true : false)">

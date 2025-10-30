@@ -1,0 +1,41 @@
+<div class="course-list">
+  <a routerLink="/">&larr; Back to all courses</a>
+
+  <h2 *ngIf="course">{{ course.name }} - Task List</h2>
+  <h2 *ngIf="!course && !error">Loading Course Details...</h2>
+
+  <button class="create-btn" (click)="openCreateTask()">+ Create New Task</button>
+
+  <div *ngIf="showCreateTask" class="modal">
+    <div class="modal-content">
+      <app-create-task-component
+        [courseId]="courseId"
+        (close)="closeCreateTask($event)">
+      </app-create-task-component>
+    </div>
+  </div>
+
+  <div *ngIf="showUpdateTask && selectedTask" class="modal">
+    <div class="modal-content">
+      <app-update-task-component
+        [task]="selectedTask"
+        (close)="closeUpdateTask($event)">
+      </app-update-task-component>
+    </div>
+  </div>
+
+  <div *ngIf="loadingTasks">Loading tasks...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <ul *ngIf="!loadingTasks && tasks.length > 0">
+    <li *ngFor="let task of tasks">
+      <h3>{{ task.title }}</h3>
+      <p>Due Date: {{ task.dueDate | date:'mediumDate' }}</p>
+      <p>Time Limit: {{ task.timeLimitPerStudent }}</p>
+      <button class="update-btn" (click)="openUpdateTask(task)">Update</button>
+      <button class="delete-btn" (click)="deleteTask(task)">Delete</button>
+    </li>
+  </ul>
+
+  <div *ngIf="!loadingTasks && tasks.length === 0">No tasks available for this course.</div>
+</div>

@@ -3,6 +3,7 @@ import { Course, CourseService } from "../../services/CourseService/course-servi
 import { CreateCourseComponent } from "../../components/create-course-component/create-course-component";
 import { UpdateCourseComponent } from "../../components/update-course-component/update-course-component";
 import { CommonModule, DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -20,7 +21,7 @@ export class Home implements OnInit {
   showUpdateCourse: boolean = false;
   selectedCourse: Course | null = null;
 
-  constructor(private courseService: CourseService) {}
+  constructor(private courseService: CourseService, private router: Router) {}
 
   ngOnInit(): void {
     this.fetchCourses();
@@ -65,19 +66,25 @@ export class Home implements OnInit {
     if (courseCreated) this.fetchCourses();
   }
 
-openUpdateCourse(course: Course) {
-  // Ensure the course object has the ID
-  if (!course.id) {
-    console.error('Cannot update course without ID', course);
-    return;
+  openUpdateCourse(course: Course) {
+    // Ensure the course object has the ID
+    if (!course.id) {
+      console.error('Cannot update course without ID', course);
+      return;
+    }
+    console.log(course)
+    this.selectedCourse = course;
+    this.showUpdateCourse = true;
   }
-  console.log(course)
-  this.selectedCourse = course;
-  this.showUpdateCourse = true;
-}
+
   closeUpdateCourse(updated: boolean) {
     this.showUpdateCourse = false;
     this.selectedCourse = null;
     if (updated) this.fetchCourses();
+  }
+
+  navigateToCourse(courseId: string) {
+    if (!courseId) return;
+    this.router.navigate(['/course', courseId]);
   }
 }

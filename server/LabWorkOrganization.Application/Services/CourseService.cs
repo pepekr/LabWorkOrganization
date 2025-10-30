@@ -38,10 +38,7 @@ namespace LabWorkOrganization.Application.Services
                 {
                     throw new ArgumentException("User not found");
                 }
-                if (user.Data.SubGoogleId is null)
-                {
-                    throw new ArgumentException("User does not have an external ID");
-                }
+
 
                 var newCourse = new Course
                 { // NOT ENTERING EXTERNAL ID EXTERNAL API WILL HANDLE IT
@@ -54,6 +51,10 @@ namespace LabWorkOrganization.Application.Services
                 };
                 if (useExternal)
                 {
+                    if (user.Data.SubGoogleId is null)
+                    {
+                        throw new ArgumentException("User does not have an external ID");
+                    }
                     var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
                     if (!accessTokenResult.IsSuccess)
                         throw new Exception(accessTokenResult.ErrorMessage);
