@@ -13,5 +13,7 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<SubGroup>> UpdateStudents(SubGroupStudentsDto subGroupStudents);
         Task<Result<SubGroup>> AddToQueue(QueuePlaceCreationalDto queuePlace);
         Task<Result<SubGroup>> RemoveFromQueue(string queuePlaceId);
+
+
     }
 }

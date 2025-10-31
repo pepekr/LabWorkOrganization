@@ -167,7 +167,7 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        // 🔥 Основна штука — прапорець external
+
         public async Task<IEnumerable<User>> GetAllUsersByCourseId(string courseId, bool external = false)
         {
             var result = new List<User>();
@@ -176,13 +176,18 @@ namespace LabWorkOrganization.Application.Services
             {
                 if (!external)
                 {
-                    // 1️⃣ локальний курс → витягуємо студентів через підгрупи
-                    var subgroups = await _subGroupRepository.GetAllByCourseIdAsync(courseId) ?? new List<SubGroup>();
-                    var users = subgroups.SelectMany(sg => sg.Students).Distinct().ToList();
+                    var subgroups = await _subGroupRepository.GetAllByCourseIdAsync(
+                        courseId,
+                        sg => sg.Students
+                    ) ?? new List<SubGroup>();
+
+                    var users = subgroups
+                        .SelectMany(sg => sg.Students)
+                        .Distinct()
+                        .ToList();
+
                     return users;
                 }
-
-                // 2️⃣ зовнішній курс → Google Classroom
                 var userId = GetCurrentUserId();
                 var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
                 if (!accessTokenResult.IsSuccess)
@@ -214,5 +219,31 @@ namespace LabWorkOrganization.Application.Services
                 return result;
             }
         }
+
+
+        public async Task<Result<IEnumerable<User>>> GetAllUsersBySubGroupId(string subGroupId)
+        {
+            try
+            {
+                var subGroup = await _subGroupRepository.GetByIdAsync(
+                    subGroupId,
+                    sg => sg.Students
+                );
+
+                if (subGroup == null)
+                    throw new Exception("SubGroup was not found");
+
+                var users = subGroup.Students ?? new List<User>();
+
+                return Result<IEnumerable<User>>.Success(users);
+            }
+            catch (Exception ex)
+            {
+                return Result<IEnumerable<User>>.Failure(
+                    $"An error occurred while retrieving users: {ex.Message}"
+                );
+            }
+        }
+
     }
 }
