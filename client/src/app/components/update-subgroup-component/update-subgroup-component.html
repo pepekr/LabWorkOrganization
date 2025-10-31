@@ -1,0 +1,24 @@
+<div class="create-course-form">
+  <h2>Manage Students in {{ subgroup?.name }}</h2>
+  <button type="button" class="close-btn" (click)="cancel()">×</button>
+
+  <form #subgroupForm="ngForm" (ngSubmit)="submitForm(subgroupForm)">
+
+    <div class="form-group">
+      <label for="studentsEmails">Student Emails</label>
+      <textarea
+        id="studentsEmails"
+        name="studentsEmails"
+        rows="10"
+        placeholder="Enter emails separated by commas or new lines"
+        [(ngModel)]="studentsEmailsRaw"
+        [ngModelOptions]="{standalone: true}">
+      </textarea>
+    </div>
+
+    <button type="submit" [disabled]="loading">Update Students</button>
+
+    <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  </form>
+</div>

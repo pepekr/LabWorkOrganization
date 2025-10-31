@@ -1,0 +1,44 @@
+<div class="create-course-form">
+  <h2>Create New Subgroup</h2>
+  <button type="button" class="close-btn" (click)="cancel()">× Close</button>
+
+  <form #subgroupForm="ngForm" (ngSubmit)="submitForm(subgroupForm)">
+
+    <div class="form-group">
+      <label for="name">Subgroup Name</label>
+      <input type="text"
+             id="name"
+             name="name"
+             required
+             [(ngModel)]="dto.name"
+             [ngModelOptions]="{standalone: true}" />
+    </div>
+
+    <div class="form-group">
+      <label>Allowed Days</label>
+      <div class="checkbox-group">
+        <label *ngFor="let day of daysOfWeek">
+          <input type="checkbox"
+                 name="day_{{day.value}}" [(ngModel)]="day.checked" [ngModelOptions]="{standalone: true}" />
+          {{ day.name }} </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="studentsEmails">Student Emails</label>
+      <textarea
+        id="studentsEmails"
+        name="studentsEmails"
+        rows="5"
+        placeholder="Enter emails separated by commas or new lines"
+        [(ngModel)]="dto.studentsEmailsRaw"
+        [ngModelOptions]="{standalone: true}">
+      </textarea>
+    </div>
+
+    <button type="submit" [disabled]="loading">Create Subgroup</button>
+
+    <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  </form>
+</div>

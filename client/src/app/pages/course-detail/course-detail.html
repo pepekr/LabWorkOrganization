@@ -1,10 +1,9 @@
 <div class="course-list">
   <a routerLink="/">&larr; Back to all courses</a>
 
-  <h2 *ngIf="course">{{ course.name }} - Task List</h2>
+  <h2 *ngIf="course">{{ course.name }} - Details</h2>
   <h2 *ngIf="!course && !error">Loading Course Details...</h2>
-
-  <button class="create-btn" (click)="openCreateTask()">+ Create New Task</button>
+  <div *ngIf="error" class="error">{{ error }}</div>
 
   <div *ngIf="showCreateTask" class="modal">
     <div class="modal-content">
@@ -24,8 +23,53 @@
     </div>
   </div>
 
+  <div *ngIf="showCreateSubgroup" class="modal">
+    <div class="modal-content">
+      <app-create-subgroup-component
+        [courseId]="courseId"
+        (close)="closeCreateSubgroup($event)">
+      </app-create-subgroup-component>
+    </div>
+  </div>
+
+  <div *ngIf="showUpdateSubgroup && selectedSubgroup" class="modal">
+    <div class="modal-content">
+      <app-update-subgroup-component
+        [subgroup]="selectedSubgroup"
+        (close)="closeUpdateSubgroup($event)">
+      </app-update-subgroup-component>
+    </div>
+  </div>
+
+
+  <hr>
+  <h2>Subgroups</h2>
+  <button class="create-btn" (click)="openCreateSubgroup()">+ Create New Subgroup</button>
+
+  <div *ngIf="loadingSubgroups">Loading subgroups...</div>
+
+  <ul *ngIf="!loadingSubgroups && subgroups.length > 0">
+    <li *ngFor="let subgroup of subgroups">
+      <h3>{{ subgroup.name }}</h3>
+
+      <p>Students: {{ subgroup.students?.length || 0 }}</p>
+
+      <p>Active Days: {{ formatAllowedDays(subgroup.allowedDays) }}</p>
+
+      <button class="update-btn" (click)="openUpdateSubgroup(subgroup)">Manage Students</button>
+      <button class="delete-btn" (click)="deleteSubgroup(subgroup)">Delete</button>
+    </li>
+  </ul>
+
+  <div *ngIf="!loadingSubgroups && subgroups.length === 0">
+    No subgroups available for this course.
+  </div>
+
+  <hr>
+  <h2>Tasks</h2>
+  <button class="create-btn" (click)="openCreateTask()">+ Create New Task</button>
+
   <div *ngIf="loadingTasks">Loading tasks...</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
 
   <ul *ngIf="!loadingTasks && tasks.length > 0">
     <li *ngFor="let task of tasks">
@@ -37,5 +81,7 @@
     </li>
   </ul>
 
-  <div *ngIf="!loadingTasks && tasks.length === 0">No tasks available for this course.</div>
+  <div *ngIf="!loadingTasks && tasks.length === 0">
+    No tasks available for this course.
+  </div>
 </div>

@@ -14,7 +14,6 @@ namespace LabWorkOrganization.Domain.Entities
         public DayOfWeek[] AllowedDays { get; set; }
         [JsonIgnore]
         public ICollection<QueuePlace> Queue { get; set; } = new List<QueuePlace>();
-        [JsonIgnore]
         public ICollection<User> Students { get; set; } = new List<User>();
 
         public string CourseId { get; set; }
