@@ -56,5 +56,40 @@ namespace LabWorkOrganization.API.Controllers
             }
             return Ok(result.Data);
         }
+        
+        /**
+         * Оновлює список студентів у підгрупі.
+         * Очікує DTO, що містить ID підгрупи та новий список email-адрес.
+         */
+        [HttpPut("{subgroupId}/students")]
+        public async Task<IActionResult> UpdateStudents([FromRoute] string subgroupId, [FromBody] SubGroupStudentsDto subGroupStudentsDto)
+        {
+            // Перевірка, що ID в DTO та ID в маршруті збігаються
+            if (subgroupId != subGroupStudentsDto.SubGroupId)
+            {
+                return BadRequest("Route ID and DTO ID do not match.");
+            }
+
+            var result = await _subGroupService.UpdateStudents(subGroupStudentsDto);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
+        }
+        
+        /**
+         * Видаляє підгрупу за її ID.
+         */
+        [HttpDelete("{subgroupId}")]
+        public async Task<IActionResult> DeleteSubgroup([FromRoute] string subgroupId)
+        {
+            var result = await _subGroupService.DeleteSubgroup(subgroupId); // [cite: 1291, 1443]
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
+        }
     }
 }
