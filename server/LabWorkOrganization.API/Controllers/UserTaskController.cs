@@ -1,4 +1,6 @@
 ﻿using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Domain.Entities;
+using LabWorkOrganization.Domain.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,33 +21,36 @@ namespace LabWorkOrganization.API.Controllers
         [HttpGet("my-status")]
         public async Task<IActionResult> GetUserTaskStatus([FromRoute] string taskId)
         {
-            var result = await _userTaskService.GetUserTaskStatus(taskId);
+            Result<UserTask> result = await _userTaskService.GetUserTaskStatus(taskId);
             if (!result.IsSuccess)
             {
                 return NotFound(result.ErrorMessage);
             }
+
             return Ok(result.Data);
         }
 
         [HttpPost("complete")]
         public async Task<IActionResult> MarkAsCompleted([FromRoute] string taskId)
         {
-            var result = await _userTaskService.MarkAsCompleted(taskId);
+            Result<UserTask> result = await _userTaskService.MarkAsCompleted(taskId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
             }
+
             return Ok(result.Data);
         }
 
         [HttpPost("return")]
         public async Task<IActionResult> MarkAsReturned([FromRoute] string taskId)
         {
-            var result = await _userTaskService.MarkAsReturned(taskId);
+            Result<UserTask> result = await _userTaskService.MarkAsReturned(taskId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
             }
+
             return Ok(result.Data);
         }
     }

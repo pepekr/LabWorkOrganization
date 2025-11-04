@@ -1,7 +1,5 @@
 namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos
 {
-    using System;
-
     namespace LabWorkOrganization.Infrastructure.ExternalClients.Google.Dtos
     {
         public class LabWorkClassroomDto
@@ -54,5 +52,4 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos
             MULTIPLE_CHOICE_QUESTION
         }
     }
-
 }

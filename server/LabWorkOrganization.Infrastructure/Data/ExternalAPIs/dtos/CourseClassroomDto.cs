@@ -1,9 +1,7 @@
-
 namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos
 {
     public class CourseClassroomDto
     {
-
         public string id { get; set; } = null!;
         public string name { get; set; } = null!;
         public string section { get; set; } = null!;

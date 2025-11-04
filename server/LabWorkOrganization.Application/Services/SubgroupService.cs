@@ -1,6 +1,7 @@
 using LabWorkOrganization.Application.Dtos;
 using LabWorkOrganization.Application.Dtos.SubGroupDtos;
 using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Application.Validation;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
@@ -9,11 +10,11 @@ namespace LabWorkOrganization.Application.Services
 {
     public class SubgroupService : ISubgroupService
     {
-        private readonly ICourseScopedRepository<SubGroup> _subGroupRepository;
+        private readonly ICourseService _courseService;
         private readonly ICrudRepository<QueuePlace> _queuePlaceRepository;
+        private readonly ICourseScopedRepository<SubGroup> _subGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserService _userService;
-        private readonly ICourseService _courseService;
 
         public SubgroupService(
             ICourseScopedRepository<SubGroup> subGroupRepository,
@@ -29,41 +30,36 @@ namespace LabWorkOrganization.Application.Services
             _courseService = courseService;
         }
 
-        private async Task EnsureCurrentUserIsOwnerOfCourse(string courseId)
-        {
-            var currentUserId = _userService.GetCurrentUserId();
-            var course = await _courseService.GetCourseById(courseId);
-            if (!course.IsSuccess || course.Data is null)
-                throw new Exception("Course not found");
-
-            if (course.Data.OwnerId != currentUserId)
-                throw new UnauthorizedAccessException("You are not the owner of this course");
-        }
-
         public async Task<Result<SubGroup>> CreateSubgroup(SubGroupCreationalDto subgroup)
         {
             try
             {
                 await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
 
-                var validationErrors = Validation.ValidationHelper.Validate(subgroup);
+                List<string> validationErrors = ValidationHelper.Validate(subgroup);
                 if (validationErrors.Any())
-                    throw new ArgumentException(string.Join("; ", validationErrors));
-
-                var courseResult = await _courseService.GetCourseById(subgroup.CourseId);
-                if (!courseResult.IsSuccess || courseResult.Data is null)
-                    throw new Exception(courseResult.ErrorMessage);
-
-                // тільки зареєстровані юзери
-                var studentList = new List<User>();
-                foreach (var email in subgroup.StudentsEmails)
                 {
-                    var userResult = await _userService.GetUserByEmail(email);
-                    if (userResult.IsSuccess && userResult.Data is not null)
-                        studentList.Add(userResult.Data);
+                    throw new ArgumentException(string.Join("; ", validationErrors));
                 }
 
-                var newSubgroup = new SubGroup
+                Result<Course?> courseResult = await _courseService.GetCourseById(subgroup.CourseId);
+                if (!courseResult.IsSuccess || courseResult.Data is null)
+                {
+                    throw new Exception(courseResult.ErrorMessage);
+                }
+
+                // тільки зареєстровані юзери
+                List<User> studentList = new();
+                foreach (string email in subgroup.StudentsEmails)
+                {
+                    Result<User?> userResult = await _userService.GetUserByEmail(email);
+                    if (userResult.IsSuccess && userResult.Data is not null)
+                    {
+                        studentList.Add(userResult.Data);
+                    }
+                }
+
+                SubGroup newSubgroup = new()
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = subgroup.Name,
@@ -87,9 +83,11 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var subgroup = await _subGroupRepository.GetByIdAsync(subgroupId);
+                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(subgroupId);
                 if (subgroup is null)
+                {
                     throw new Exception("Subgroup not found");
+                }
 
                 await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
 
@@ -110,12 +108,12 @@ namespace LabWorkOrganization.Application.Services
             try
             {
                 // MODIFIED: Include Queue and related data
-                var subgroups = await _subGroupRepository.GetAllByCourseIdAsync(courseId, 
+                IEnumerable<SubGroup> subgroups = await _subGroupRepository.GetAllByCourseIdAsync(courseId,
                     sg => sg.Students,
                     sg => sg.Queue.Select(q => q.Task),
                     sg => sg.Queue.Select(q => q.User)
                 ) ?? new List<SubGroup>();
-                
+
                 return Result<IEnumerable<SubGroup>>.Success(subgroups);
             }
             catch (Exception ex)
@@ -128,18 +126,22 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var subgroup = await _subGroupRepository.GetByIdAsync(subGroupStudents.SubGroupId);
+                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(subGroupStudents.SubGroupId);
                 if (subgroup is null)
+                {
                     throw new Exception("Subgroup not found");
+                }
 
                 await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
 
-                var updatedStudents = new List<User>();
-                foreach (var email in subGroupStudents.StudentsEmails)
+                List<User> updatedStudents = new();
+                foreach (string email in subGroupStudents.StudentsEmails)
                 {
-                    var userResult = await _userService.GetUserByEmail(email);
+                    Result<User?> userResult = await _userService.GetUserByEmail(email);
                     if (userResult.IsSuccess && userResult.Data is not null)
+                    {
                         updatedStudents.Add(userResult.Data);
+                    }
                 }
 
                 subgroup.Students = updatedStudents;
@@ -158,18 +160,20 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId, sg => sg.Students);
+                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId, sg => sg.Students);
                 if (subgroup is null)
+                {
                     throw new Exception("Subgroup not found");
+                }
 
                 // Get current user ID from token
-                var currentUserId = _userService.GetCurrentUserId();
+                string currentUserId = _userService.GetCurrentUserId();
 
                 // Check if user is part of the subgroup
                 if (!subgroup.Students.Any(s => s.Id == currentUserId))
                 {
                     // Optionally, if owner can add, check ownership
-                     try
+                    try
                     {
                         await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
                     }
@@ -178,8 +182,8 @@ namespace LabWorkOrganization.Application.Services
                         throw new UnauthorizedAccessException("User is not a member of this subgroup.");
                     }
                 }
-                
-                var newQueuePlace = new QueuePlace
+
+                QueuePlace newQueuePlace = new()
                 {
                     Id = Guid.NewGuid().ToString(),
                     UserId = currentUserId, // <-- Use current user ID
@@ -193,9 +197,12 @@ namespace LabWorkOrganization.Application.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 // Eager load the new place to return it
-                var createdPlace = await _queuePlaceRepository.GetByIdAsync(newQueuePlace.Id, q => q.Task, q => q.User);
+                QueuePlace? createdPlace =
+                    await _queuePlaceRepository.GetByIdAsync(newQueuePlace.Id, q => q.Task, q => q.User);
 
-                return Result<SubGroup>.SuccessWithData(subgroup, createdPlace); // Custom Result method if you need it, or just return subgroup
+                return
+                    Result<SubGroup>.SuccessWithData(subgroup,
+                        createdPlace); // Custom Result method if you need it, or just return subgroup
             }
             catch (Exception ex)
             {
@@ -207,22 +214,26 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var queuePlace = await _queuePlaceRepository.GetByIdAsync(queuePlaceId);
+                QueuePlace? queuePlace = await _queuePlaceRepository.GetByIdAsync(queuePlaceId);
                 if (queuePlace is null)
+                {
                     throw new Exception("Queue place not found");
+                }
 
-                var subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId);
+                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId);
                 if (subgroup is null)
+                {
                     throw new Exception("Subgroup not found");
-                
+                }
+
                 // Check if user is owner OR the user who made the booking
-                var currentUserId = _userService.GetCurrentUserId();
+                string currentUserId = _userService.GetCurrentUserId();
                 if (queuePlace.UserId != currentUserId)
                 {
                     // If not the user, check if they are the owner
                     await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
                 }
-                
+
                 _queuePlaceRepository.Delete(queuePlace);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -231,6 +242,21 @@ namespace LabWorkOrganization.Application.Services
             catch (Exception ex)
             {
                 return Result<SubGroup>.Failure($"Error removing from queue: {ex.Message}");
+            }
+        }
+
+        private async Task EnsureCurrentUserIsOwnerOfCourse(string courseId)
+        {
+            string currentUserId = _userService.GetCurrentUserId();
+            Result<Course?> course = await _courseService.GetCourseById(courseId);
+            if (!course.IsSuccess || course.Data is null)
+            {
+                throw new Exception("Course not found");
+            }
+
+            if (course.Data.OwnerId != currentUserId)
+            {
+                throw new UnauthorizedAccessException("You are not the owner of this course");
             }
         }
     }

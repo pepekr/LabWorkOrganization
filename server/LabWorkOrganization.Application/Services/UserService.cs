@@ -1,5 +1,6 @@
 using LabWorkOrganization.Application.Dtos.UserDtos;
 using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Application.Validation;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Domain.Utilities;
@@ -9,14 +10,14 @@ namespace LabWorkOrganization.Application.Services
 {
     public class UserService : IUserService
     {
-        private readonly ICrudRepository<User> _userRepository;
-        private readonly ICourseScopedRepository<SubGroup> _subGroupRepository;
-        private readonly IPasswordHasher _passwordHasher;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IExternalCrudRepoFactory _externalCrudFactory;
 
         private readonly IExternalTokenService _externalTokenService;
-        private readonly IExternalCrudRepoFactory _externalCrudFactory;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IPasswordHasher _passwordHasher;
+        private readonly ICourseScopedRepository<SubGroup> _subGroupRepository;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ICrudRepository<User> _userRepository;
 
         public UserService(
             ICrudRepository<User> userRepo,
@@ -38,17 +39,23 @@ namespace LabWorkOrganization.Application.Services
 
         public string GetCurrentUserId()
         {
-            var currentUserId = _httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value;
+            string? currentUserId = _httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value;
             if (currentUserId is null)
+            {
                 throw new UnauthorizedAccessException("User is not authenticated.");
+            }
+
             return currentUserId;
         }
 
         public string GetCurrentUserExternalId()
         {
-            var externalId = _httpContextAccessor.HttpContext?.User?.FindFirst("external_id")?.Value;
+            string? externalId = _httpContextAccessor.HttpContext?.User?.FindFirst("external_id")?.Value;
             if (externalId is null)
+            {
                 throw new UnauthorizedAccessException("External ID not found.");
+            }
+
             return externalId;
         }
 
@@ -56,10 +63,13 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var users = await _userRepository.GetAllAsync();
-                var user = users.FirstOrDefault(u => u.Email == email);
+                IEnumerable<User> users = await _userRepository.GetAllAsync();
+                User? user = users.FirstOrDefault(u => u.Email == email);
                 if (user is null)
+                {
                     throw new ArgumentNullException("user not found");
+                }
+
                 return Result<User?>.Success(user);
             }
             catch (Exception ex)
@@ -72,9 +82,12 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var user = await _userRepository.GetByIdAsync(id);
+                User? user = await _userRepository.GetByIdAsync(id);
                 if (user is null)
+                {
                     throw new ArgumentNullException("user not found");
+                }
+
                 return Result<User?>.Success(user);
             }
             catch (Exception ex)
@@ -87,7 +100,7 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var users = await _userRepository.GetAllAsync() ?? new List<User>();
+                IEnumerable<User> users = await _userRepository.GetAllAsync() ?? new List<User>();
                 return Result<IEnumerable<User>>.Success(users);
             }
             catch (Exception)
@@ -100,15 +113,19 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var errors = Validation.ValidationHelper.Validate(user);
+                List<string> errors = ValidationHelper.Validate(user);
                 if (errors.Count > 0)
+                {
                     throw new ArgumentException(string.Join("; ", errors));
+                }
 
-                var result = await GetUserByEmail(user.Email);
+                Result<User?> result = await GetUserByEmail(user.Email);
                 if (result.IsSuccess && result.Data is not null)
+                {
                     throw new Exception("user with this email already exists");
+                }
 
-                var newUser = new User
+                User newUser = new()
                 {
                     Id = Guid.NewGuid().ToString(),
                     Email = user.Email,
@@ -130,8 +147,12 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var user = await _userRepository.GetByIdAsync(id);
-                if (user == null) throw new Exception("user was not found");
+                User? user = await _userRepository.GetByIdAsync(id);
+                if (user == null)
+                {
+                    throw new Exception("user was not found");
+                }
+
                 _userRepository.Delete(user);
                 await _unitOfWork.SaveChangesAsync();
                 return Result<User>.Success(user);
@@ -146,13 +167,17 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var currentUserId = GetCurrentUserId();
+                string currentUserId = GetCurrentUserId();
                 if (id != currentUserId)
+                {
                     return Result<User>.Failure("You can update only your own profile");
+                }
 
-                var user = await _userRepository.GetByIdAsync(id);
+                User? user = await _userRepository.GetByIdAsync(id);
                 if (user == null)
+                {
                     throw new Exception("user was not found");
+                }
 
                 user.Name = updatedUser.Name;
                 user.Email = updatedUser.Email;
@@ -170,45 +195,51 @@ namespace LabWorkOrganization.Application.Services
 
         public async Task<IEnumerable<User>> GetAllUsersByCourseId(string courseId, bool external = false)
         {
-            var result = new List<User>();
+            List<User> result = new();
 
             try
             {
                 if (!external)
                 {
-                    var subgroups = await _subGroupRepository.GetAllByCourseIdAsync(
+                    IEnumerable<SubGroup> subgroups = await _subGroupRepository.GetAllByCourseIdAsync(
                         courseId,
                         sg => sg.Students
                     ) ?? new List<SubGroup>();
 
-                    var users = subgroups
+                    List<User> users = subgroups
                         .SelectMany(sg => sg.Students)
                         .Distinct()
                         .ToList();
 
                     return users;
                 }
-                var userId = GetCurrentUserId();
-                var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
-                if (!accessTokenResult.IsSuccess)
-                    throw new Exception(accessTokenResult.ErrorMessage);
 
-                var repo = _externalCrudFactory.Create<User>(
+                string userId = GetCurrentUserId();
+                Result<string> accessTokenResult =
+                    await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                if (!accessTokenResult.IsSuccess)
+                {
+                    throw new Exception(accessTokenResult.ErrorMessage);
+                }
+
+                IExternalCrudRepo<User> repo = _externalCrudFactory.Create<User>(
                     $"https://classroom.googleapis.com/v1/courses/{courseId}/students"
                 );
 
-                var externalUsers = await repo.GetAllAsync() ?? Enumerable.Empty<User>();
-                var localUsers = await _userRepository.GetAllAsync() ?? new List<User>();
+                IEnumerable<User> externalUsers = await repo.GetAllAsync() ?? Enumerable.Empty<User>();
+                IEnumerable<User> localUsers = await _userRepository.GetAllAsync() ?? new List<User>();
 
-                foreach (var externalUser in externalUsers)
+                foreach (User externalUser in externalUsers)
                 {
-                    var local = localUsers.FirstOrDefault(u =>
+                    User? local = localUsers.FirstOrDefault(u =>
                         (!string.IsNullOrEmpty(u.SubGoogleId) && u.SubGoogleId == externalUser.SubGoogleId) ||
                         (!string.IsNullOrEmpty(u.Email) && u.Email == externalUser.Email)
                     );
 
                     if (local != null)
+                    {
                         result.Add(local);
+                    }
                 }
 
                 return result;
@@ -225,15 +256,17 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var subGroup = await _subGroupRepository.GetByIdAsync(
+                SubGroup? subGroup = await _subGroupRepository.GetByIdAsync(
                     subGroupId,
                     sg => sg.Students
                 );
 
                 if (subGroup == null)
+                {
                     throw new Exception("SubGroup was not found");
+                }
 
-                var users = subGroup.Students ?? new List<User>();
+                ICollection<User> users = subGroup.Students ?? new List<User>();
 
                 return Result<IEnumerable<User>>.Success(users);
             }
@@ -244,6 +277,5 @@ namespace LabWorkOrganization.Application.Services
                 );
             }
         }
-
     }
 }

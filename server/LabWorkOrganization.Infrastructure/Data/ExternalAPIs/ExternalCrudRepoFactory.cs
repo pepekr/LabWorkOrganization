@@ -3,7 +3,8 @@ using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients;
 using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos;
-using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos.LabWorkOrganization.Infrastructure.ExternalClients.Google.Dtos;
+using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos.LabWorkOrganization.Infrastructure.ExternalClients.
+    Google.Dtos;
 
 namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs
 {
@@ -23,7 +24,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs
         public IExternalCrudRepo<TEntity> Create<TEntity>(string baseUrl)
             where TEntity : class
         {
-            var dtoType = GetDtoType(typeof(TEntity));
+            Type dtoType = GetDtoType(typeof(TEntity));
             Type clientType;
             if (typeof(IHasCourseId).IsAssignableFrom(typeof(TEntity)))
             {
@@ -34,7 +35,7 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs
                 clientType = typeof(ClassroomClient<,>).MakeGenericType(typeof(TEntity), dtoType);
             }
 
-            var instance = Activator.CreateInstance(
+            object? instance = Activator.CreateInstance(
                 clientType,
                 _httpClient,
                 baseUrl,
@@ -43,15 +44,25 @@ namespace LabWorkOrganization.Infrastructure.Data.ExternalAPIs
             );
 
             if (instance is not IExternalCrudRepo<TEntity> repo)
-                throw new InvalidOperationException($"Created type {clientType.Name} is not a valid IExternalCrudRepo<{typeof(TEntity).Name}>.");
+            {
+                throw new InvalidOperationException(
+                    $"Created type {clientType.Name} is not a valid IExternalCrudRepo<{typeof(TEntity).Name}>.");
+            }
 
             return repo;
         }
 
         private static Type GetDtoType(Type entityType)
         {
-            if (entityType == typeof(Course)) return typeof(CourseClassroomDto);
-            if (entityType == typeof(LabTask)) return typeof(LabWorkClassroomDto);
+            if (entityType == typeof(Course))
+            {
+                return typeof(CourseClassroomDto);
+            }
+
+            if (entityType == typeof(LabTask))
+            {
+                return typeof(LabWorkClassroomDto);
+            }
 
             throw new NotSupportedException($"No DTO mapping registered for entity: {entityType.Name}");
         }

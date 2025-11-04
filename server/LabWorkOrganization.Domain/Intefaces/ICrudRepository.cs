@@ -3,12 +3,12 @@ using System.Linq.Expressions;
 namespace LabWorkOrganization.Domain.Intefaces
 {
     public interface ICrudRepository<TEntity>
-      where TEntity : class
+        where TEntity : class
     {
-        public Task<TEntity> AddAsync(TEntity entity);
-        public Task<TEntity?> GetByIdAsync(string id, params Expression<Func<TEntity, object>>[] includes);
-        public Task<IEnumerable<TEntity>> GetAllAsync();
-        public void Update(TEntity entity);
-        public void Delete(TEntity entity);
+        Task<TEntity> AddAsync(TEntity entity);
+        Task<TEntity?> GetByIdAsync(string id, params Expression<Func<TEntity, object>>[] includes);
+        Task<IEnumerable<TEntity>> GetAllAsync();
+        void Update(TEntity entity);
+        void Delete(TEntity entity);
     }
 }

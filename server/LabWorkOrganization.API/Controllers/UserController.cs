@@ -1,4 +1,6 @@
 using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Domain.Entities;
+using LabWorkOrganization.Domain.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +12,7 @@ namespace LabWorkOrganization.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+
         public UserController(IUserService userService)
         {
             _userService = userService;
@@ -18,12 +21,12 @@ namespace LabWorkOrganization.API.Controllers
         [HttpGet("subgroup/{subgroupId}")]
         public async Task<IActionResult> GetUsersBySubGroupId(string subgroupId)
         {
-            var a = await _userService.GetAllUsersBySubGroupId(subgroupId);
+            Result<IEnumerable<User>> a = await _userService.GetAllUsersBySubGroupId(subgroupId);
             if (!a.IsSuccess)
             {
-
                 return BadRequest(a.ErrorMessage);
             }
+
             return Ok(a.Data);
         }
     }

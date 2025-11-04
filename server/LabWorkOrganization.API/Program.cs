@@ -1,19 +1,23 @@
 using DotNetEnv;
 using LabWorkOrganization.API;
+using LabWorkOrganization.Application.Dtos;
 using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Domain.Utilities;
+using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
 Env.Load();
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddHttpClient<LabWorkOrganization.Infrastructure.Data.ExternalAPIs.Clients.JWKSClient>(client =>
+builder.Services.AddHttpClient<JWKSClient>(client =>
 {
     client.BaseAddress = new Uri("https://www.googleapis.com/oauth2/v3/");
 });
@@ -23,20 +27,20 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter JWT token manually here (for Swagger testing only)"
-    });
+    c.AddSecurityDefinition("Bearer",
+        new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Enter JWT token manually here (for Swagger testing only)"
+        });
 });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
-
         o.RequireHttpsMetadata = true;
         o.SaveToken = false;
 
@@ -45,24 +49,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
-
                 if (string.IsNullOrEmpty(context.Token))
                 {
-
-                    var cookieToken = context.Request.Cookies["access_token"];
+                    string? cookieToken = context.Request.Cookies["access_token"];
                     if (!string.IsNullOrEmpty(cookieToken))
                     {
                         context.Token = cookieToken;
-                        Console.WriteLine($"[AUTH TRACE] 🍪 Token pulled from cookie.");
+                        Console.WriteLine("[AUTH TRACE] 🍪 Token pulled from cookie.");
                     }
                     else
                     {
-                        Console.WriteLine($"[AUTH TRACE] ⚠️ No token found in header or cookie.");
+                        Console.WriteLine("[AUTH TRACE] ⚠️ No token found in header or cookie.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"[AUTH TRACE] 🧠 Token found in Authorization header.");
+                    Console.WriteLine("[AUTH TRACE] 🧠 Token found in Authorization header.");
                 }
 
                 Console.WriteLine($"[AUTH TRACE] Raw Token: {context.Token ?? "NULL"}");
@@ -70,7 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             },
             OnTokenValidated = context =>
             {
-                Console.WriteLine($"[AUTH TRACE] ✅ Token successfully validated.");
+                Console.WriteLine("[AUTH TRACE] ✅ Token successfully validated.");
                 Console.WriteLine($"[AUTH TRACE] User: {context.Principal?.Identity?.Name}");
                 Console.WriteLine($"[AUTH TRACE] Claims: {context.Principal?.Claims.Count()}");
                 return Task.CompletedTask;
@@ -82,7 +84,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
 
-        o.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
@@ -90,7 +92,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
             ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
-            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+            IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")!)
             ),
             ClockSkew = TimeSpan.Zero
@@ -98,7 +100,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
@@ -115,21 +117,23 @@ app.UseCors(c => c
 );
 app.Use(async (context, next) =>
 {
-    var accessToken = context.Request.Cookies["access_token"];
-    var refreshToken = context.Request.Cookies["refresh_token"];
+    string? accessToken = context.Request.Cookies["access_token"];
+    string? refreshToken = context.Request.Cookies["refresh_token"];
 
     // Only refresh if access token is missing or expired, and we have a refresh token
     if (string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
     {
         Console.WriteLine("[AUTH REFRESH] 🌀 Attempting token refresh...");
 
-        var refreshService = context.RequestServices.GetRequiredService<IAuthService>(); // whatever service has HandleRefresh
-        var refreshResult = await refreshService.HandleRefresh(refreshToken);
+        IAuthService
+            refreshService =
+                context.RequestServices.GetRequiredService<IAuthService>(); // whatever service has HandleRefresh
+        Result<JWTTokenDto> refreshResult = await refreshService.HandleRefresh(refreshToken);
 
         if (refreshResult.IsSuccess && refreshResult.Data is not null)
         {
-            var newAccess = refreshResult.Data.AccessToken;
-            var newRefresh = refreshResult.Data.RefreshToken;
+            string newAccess = refreshResult.Data.AccessToken;
+            string newRefresh = refreshResult.Data.RefreshToken;
 
             // Set new cookies
             context.Response.Cookies.Append("access_token", newAccess, new CookieOptions
@@ -140,13 +144,14 @@ app.Use(async (context, next) =>
                 Expires = DateTime.UtcNow.AddMinutes(60)
             });
 
-            context.Response.Cookies.Append("refresh_token", newRefresh, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddDays(10)
-            });
+            context.Response.Cookies.Append("refresh_token", newRefresh,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddDays(10)
+                });
 
             Console.WriteLine("[AUTH REFRESH] ✅ Tokens refreshed successfully.");
             // inject new token into the context for JwtBearer to pick up

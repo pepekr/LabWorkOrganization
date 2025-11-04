@@ -1,12 +1,12 @@
 namespace LabWorkOrganization.Domain.Intefaces
 {
     public interface IExternalCrudRepo<TEntity>
-   where TEntity : class
+        where TEntity : class
     {
-        public Task<TEntity> AddAsync(TEntity entity);
-        public Task<TEntity?> GetByIdAsync(string id);
-        public Task<IEnumerable<TEntity>> GetAllAsync();
-        public Task<TEntity> UpdateAsync(TEntity entity, string externalId);
-        public Task DeleteAsync(string externalId);
+        Task<TEntity> AddAsync(TEntity entity);
+        Task<TEntity?> GetByIdAsync(string id);
+        Task<IEnumerable<TEntity>> GetAllAsync();
+        Task<TEntity> UpdateAsync(TEntity entity, string externalId);
+        Task DeleteAsync(string externalId);
     }
 }

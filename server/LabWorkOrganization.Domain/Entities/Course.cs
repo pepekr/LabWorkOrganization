@@ -5,11 +5,9 @@ namespace LabWorkOrganization.Domain.Entities
 {
     public class Course : IHasOwnerId
     {
-        [Key]
-        public string Id { get; set; }
-        public string? ExternalId { get; set; }
+        [Key] public string Id { get; set; }
 
-        public string OwnerId { get; set; }
+        public string? ExternalId { get; set; }
         public string? OwnerExternalId { get; set; } = null!;
         public User Owner { get; set; } = null!;
         public string Name { get; set; } = null!;
@@ -18,5 +16,7 @@ namespace LabWorkOrganization.Domain.Entities
         public ICollection<LabTask> Tasks { get; set; } = new List<LabTask>();
         public DateTime EndOfCourse { get; set; }
         public ICollection<SubGroup> SubGroups { get; set; } = new List<SubGroup>();
+
+        public string OwnerId { get; set; }
     }
 }
