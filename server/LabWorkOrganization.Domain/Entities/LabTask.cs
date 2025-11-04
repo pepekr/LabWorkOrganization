@@ -10,6 +10,7 @@ namespace LabWorkOrganization.Domain.Entities
         public string Id { get; set; }
         public string? ExternalId { get; set; }
         public string Title { get; set; } = null!;
+        public string Description { get; set; } = string.Empty;
         public DateTime DueDate { get; set; }
         public bool IsSentRequired { get; set; }
         public TimeSpan TimeLimitPerStudent { get; set; }

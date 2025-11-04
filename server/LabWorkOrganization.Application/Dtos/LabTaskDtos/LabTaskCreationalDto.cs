@@ -11,6 +11,8 @@ namespace LabWorkOrganization.Application.Dtos.LabTaskDtos
         [Required]
         public bool IsSentRequired { get; set; }
         [Required]
+        public string Description { get; set; } = string.Empty;
+        [Required]
         public TimeSpan TimeLimitPerStudent { get; set; }
         [Required]
         public string CourseId { get; set; }

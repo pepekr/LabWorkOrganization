@@ -109,7 +109,13 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var subgroups = await _subGroupRepository.GetAllByCourseIdAsync(courseId) ?? new List<SubGroup>();
+                // MODIFIED: Include Queue and related data
+                var subgroups = await _subGroupRepository.GetAllByCourseIdAsync(courseId, 
+                    sg => sg.Students,
+                    sg => sg.Queue.Select(q => q.Task),
+                    sg => sg.Queue.Select(q => q.User)
+                ) ?? new List<SubGroup>();
+                
                 return Result<IEnumerable<SubGroup>>.Success(subgroups);
             }
             catch (Exception ex)
@@ -152,22 +158,44 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId);
+                var subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId, sg => sg.Students);
                 if (subgroup is null)
                     throw new Exception("Subgroup not found");
 
-                await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
+                // Get current user ID from token
+                var currentUserId = _userService.GetCurrentUserId();
 
-                subgroup.Queue.Add(new QueuePlace
+                // Check if user is part of the subgroup
+                if (!subgroup.Students.Any(s => s.Id == currentUserId))
+                {
+                    // Optionally, if owner can add, check ownership
+                     try
+                    {
+                        await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        throw new UnauthorizedAccessException("User is not a member of this subgroup.");
+                    }
+                }
+                
+                var newQueuePlace = new QueuePlace
                 {
                     Id = Guid.NewGuid().ToString(),
-                    UserId = queuePlace.UserId,
+                    UserId = currentUserId, // <-- Use current user ID
                     SubGroupId = queuePlace.SubGroupId,
-                    SpecifiedTime = queuePlace.SpecifiedTime
-                });
+                    TaskId = queuePlace.TaskId, // <-- SET TASK ID
+                    SpecifiedTime = queuePlace.SpecifiedTime.ToUniversalTime() // Store as UTC
+                };
 
+                // Add to context (which adds to subgroup.Queue)
+                await _queuePlaceRepository.AddAsync(newQueuePlace);
                 await _unitOfWork.SaveChangesAsync();
-                return Result<SubGroup>.Success(subgroup);
+
+                // Eager load the new place to return it
+                var createdPlace = await _queuePlaceRepository.GetByIdAsync(newQueuePlace.Id, q => q.Task, q => q.User);
+
+                return Result<SubGroup>.SuccessWithData(subgroup, createdPlace); // Custom Result method if you need it, or just return subgroup
             }
             catch (Exception ex)
             {
@@ -186,10 +214,15 @@ namespace LabWorkOrganization.Application.Services
                 var subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId);
                 if (subgroup is null)
                     throw new Exception("Subgroup not found");
-
-                await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
-
-                subgroup.Queue.Remove(queuePlace);
+                
+                // Check if user is owner OR the user who made the booking
+                var currentUserId = _userService.GetCurrentUserId();
+                if (queuePlace.UserId != currentUserId)
+                {
+                    // If not the user, check if they are the owner
+                    await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
+                }
+                
                 _queuePlaceRepository.Delete(queuePlace);
                 await _unitOfWork.SaveChangesAsync();
 
