@@ -1,0 +1,55 @@
+<div class="queue-container">
+  <button type="button" class="close-btn" (click)="close.emit()">×</button>
+  <h2>Queue for {{ subgroup.name }}</h2>
+
+  <div class="form-group">
+    <label for="queue-date">Select Class Date</label>
+    <select id="queue-date" [(ngModel)]="selectedDateString" (ngModelChange)="onDateSelect($event)">
+      <option value="">-- Select a date --</option>
+      <option *ngFor="let date of availableDates" [value]="date.toISOString().split('T')[0]">
+        {{ date | date:'fullDate' }}
+      </option>
+    </select>
+  </div>
+
+  <div *ngIf="selectedDateString">
+    <div class="time-summary">
+      <div>Total: <span>{{ totalTime }}</span></div>
+      <div>Booked: <span>{{ bookedTime }}</span></div>
+      <div>Remaining: <span class="remaining-time">{{ remainingTime }}</span></div>
+    </div>
+
+    <div class="current-queue">
+      <h3>Current Bookings</h3>
+      <ul *ngIf="queueForSelectedDate.length > 0; else noBookings">
+        <li *ngFor="let slot of queueForSelectedDate; let i = index">
+          <span class="queue-index">{{ i + 1 }}.</span>
+          <span class="queue-name">{{ slot.userName }}</span>
+          <span class="queue-task">{{ slot.taskTitle }} ({{ slot.taskTimeLimit }})</span>
+          <button *ngIf="slot.userEmail === authStatus?.email" class="remove-btn" (click)="cancelBooking(slot.id)">×</button>
+        </li>
+      </ul>
+      <ng-template #noBookings>
+        <p class="no-bookings">The queue is empty for this day.</p>
+      </ng-template>
+    </div>
+
+    <div class="booking-form">
+      <h3>Book Your Slot</h3>
+      <div class="form-group">
+        <label for="task-select">Select Task to Submit</label>
+        <select id="task-select" [(ngModel)]="selectedTaskId">
+          <option value="">-- Select a task --</option>
+          <option *ngFor="let task of tasks" [value]="task.id">
+            {{ task.title }} ({{ task.timeLimitPerStudent }})
+          </option>
+        </select>
+      </div>
+      <button (click)="bookSlot()" [disabled]="loading || !selectedTaskId">
+        {{ loading ? 'Booking...' : 'Book Place in Queue' }}
+      </button>
+      <div *ngIf="error" class="message error">{{ error }}</div>
+    </div>
+
+  </div>
+</div>
