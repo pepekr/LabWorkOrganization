@@ -31,7 +31,7 @@ export interface SubGroup {
   allowedDays: number[];
   students: SubgroupUser[];
   courseId: string;
-  queue: QueuePlace[]; // <-- MODIFIED from any[]
+  queue: QueuePlace[]; 
 }
 
 // DTO для СТВОРЕННЯ підгрупи
@@ -106,8 +106,9 @@ export class SubgroupService {
   /** Додати поточного юзера в чергу */
   addToQueue(courseId: string, subGroupId: string, dto: QueuePlaceCreationalDto) {
     return this.http.post<SubGroup>(
-      `${this.getBaseUrl(courseId)}/subgroups/${subGroupId}/queue/add`,
-      dto
+      `${this.getBaseUrl(courseId)}/${subGroupId}/queue/add`,
+      dto,
+      {withCredentials: true}
     );
   }
 

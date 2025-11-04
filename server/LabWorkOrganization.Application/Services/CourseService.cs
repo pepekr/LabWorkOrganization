@@ -194,10 +194,16 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
+
+        //**********************FIX THIS <3 ***********************************************************
         public async Task<Result<IEnumerable<Course>>> GetAllCoursesByUserAsync(bool includeExternal = false)
         {
             try
             {
+
+                // inject subgroup repo, instead of subgroup service, get all courses from subgroups that user in. 
+                // if u cant find method check out Scoped repos implementation
+
                 string userId = _userService.GetCurrentUserId();
                 IEnumerable<Course> internalCourses = await _crudRepository.GetAllByUserIdAsync(userId)
                                                       ?? Enumerable.Empty<Course>();

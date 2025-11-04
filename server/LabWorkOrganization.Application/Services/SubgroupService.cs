@@ -101,7 +101,7 @@ namespace LabWorkOrganization.Application.Services
                 return Result<SubGroup>.Failure($"Error deleting subgroup: {ex.Message}");
             }
         }
-        
+
         public async Task<Result<IEnumerable<SubGroupDto>>> GetAllSubgroupsByCourseId(string courseId)
         {
             try
@@ -111,7 +111,7 @@ namespace LabWorkOrganization.Application.Services
                     sg => sg.Students,
                     sg => sg.Queue
                 );
-                
+
                 List<SubGroupDto> subgroupsResult = new List<SubGroupDto>();
                 foreach (SubGroup subgroup in subgroups)
                 {
@@ -135,7 +135,8 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(subGroupStudents.SubGroupId);
+                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(subGroupStudents.SubGroupId, sg => sg.Students);
+
                 if (subgroup is null)
                 {
                     throw new Exception("Subgroup not found");
@@ -143,17 +144,20 @@ namespace LabWorkOrganization.Application.Services
 
                 await EnsureCurrentUserIsOwnerOfCourse(subgroup.CourseId);
 
+                subgroup.Students.Clear(); // SHITTY WAY TO DO IT BUT OKAY
+
                 List<User> updatedStudents = new();
                 foreach (string email in subGroupStudents.StudentsEmails)
                 {
                     Result<User?> userResult = await _userService.GetUserByEmail(email);
-                    if (userResult.IsSuccess && userResult.Data is not null)
+                    if (userResult.IsSuccess && userResult.Data is not null && subgroup.Students.All(s => s.Email != userResult.Data.Email))
                     {
-                        updatedStudents.Add(userResult.Data);
+
+                        subgroup.Students.Add(userResult.Data);
                     }
                 }
 
-                subgroup.Students = updatedStudents;
+
                 _subGroupRepository.Update(subgroup);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -165,11 +169,11 @@ namespace LabWorkOrganization.Application.Services
             }
         }
 
-        public async Task<Result<SubGroup>> AddToQueue(QueuePlaceCreationalDto queuePlace)
+        public async Task<Result<SubGroupDto>> AddToQueue(QueuePlaceCreationalDto queuePlace)
         {
             try
             {
-                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId, sg => sg.Students);
+                SubGroup? subgroup = await _subGroupRepository.GetByIdAsync(queuePlace.SubGroupId, sg => sg.Students, sg => sg.Queue);
                 if (subgroup is null)
                 {
                     throw new Exception("Subgroup not found");
@@ -209,17 +213,24 @@ namespace LabWorkOrganization.Application.Services
                 QueuePlace? createdPlace =
                     await _queuePlaceRepository.GetByIdAsync(newQueuePlace.Id, q => q.Task, q => q.User);
 
+                SubGroupDto tempSubgroup = new();
+                tempSubgroup.Name = subgroup.Name;
+                tempSubgroup.Id = subgroup.Id;
+                tempSubgroup.AllowedDays = subgroup.AllowedDays;
+                tempSubgroup.Students = subgroup.Students;
+                tempSubgroup.Queue = subgroup.Queue;
+
                 return
-                    Result<SubGroup>.SuccessWithData(subgroup,
+                    Result<SubGroupDto>.SuccessWithData(tempSubgroup,
                         createdPlace); // Custom Result method if you need it, or just return subgroup
             }
             catch (Exception ex)
             {
-                return Result<SubGroup>.Failure($"Error adding to queue: {ex.Message}");
+                return Result<SubGroupDto>.Failure($"Error adding to queue: {ex.Message}");
             }
         }
 
-        public async Task<Result<SubGroup>> RemoveFromQueue(string queuePlaceId)
+        public async Task<Result<SubGroupDto>> RemoveFromQueue(string queuePlaceId)
         {
             try
             {
@@ -246,11 +257,19 @@ namespace LabWorkOrganization.Application.Services
                 _queuePlaceRepository.Delete(queuePlace);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Result<SubGroup>.Success(subgroup);
+
+                SubGroupDto tempSubgroup = new();
+                tempSubgroup.Name = subgroup.Name;
+                tempSubgroup.Id = subgroup.Id;
+                tempSubgroup.AllowedDays = subgroup.AllowedDays;
+                tempSubgroup.Students = subgroup.Students;
+                tempSubgroup.Queue = subgroup.Queue;
+
+                return Result<SubGroupDto>.Success(tempSubgroup);
             }
             catch (Exception ex)
             {
-                return Result<SubGroup>.Failure($"Error removing from queue: {ex.Message}");
+                return Result<SubGroupDto>.Failure($"Error removing from queue: {ex.Message}");
             }
         }
 

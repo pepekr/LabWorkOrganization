@@ -12,6 +12,7 @@ import { SubgroupService, SubGroup, SubGroupStudentsDto, SubgroupUser } from "..
 })
 export class UpdateSubgroupComponent implements OnChanges {
   @Input() subgroup!: SubGroup;
+  @Input() courseId!:string;
   @Output() close = new EventEmitter<boolean>();
 
   students: SubgroupUser[] = [];
@@ -82,8 +83,9 @@ export class UpdateSubgroupComponent implements OnChanges {
       studentsEmails: studentsEmails
     };
 
+    console.log(dto, "DTO CHEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECK ")
     // Викликаємо сервіс
-    this.subgroupService.updateStudents(dto, this.subgroup.courseId).subscribe({
+    this.subgroupService.updateStudents(dto, this.courseId).subscribe({
       next:
         () => {
           this.successMessage = 'Student list updated successfully!';

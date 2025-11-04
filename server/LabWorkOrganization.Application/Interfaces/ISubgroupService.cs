@@ -11,7 +11,7 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<SubGroup>> DeleteSubgroup(string subgroupId);
         Task<Result<IEnumerable<SubGroupDto>>> GetAllSubgroupsByCourseId(string courseId);
         Task<Result<SubGroup>> UpdateStudents(SubGroupStudentsDto subGroupStudents);
-        Task<Result<SubGroup>> AddToQueue(QueuePlaceCreationalDto queuePlace);
-        Task<Result<SubGroup>> RemoveFromQueue(string queuePlaceId);
+        Task<Result<SubGroupDto>> AddToQueue(QueuePlaceCreationalDto queuePlace);
+        Task<Result<SubGroupDto>> RemoveFromQueue(string queuePlaceId);
     }
 }

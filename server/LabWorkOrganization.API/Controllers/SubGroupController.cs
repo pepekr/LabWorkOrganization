@@ -45,7 +45,7 @@ namespace LabWorkOrganization.API.Controllers
         public async Task<IActionResult> AddToQueue([FromRoute] string subGroupId,
             [FromBody] QueuePlaceCreationalDto queuePlace)
         {
-            Result<SubGroup> result = await _subGroupService.AddToQueue(queuePlace);
+            Result<SubGroupDto> result = await _subGroupService.AddToQueue(queuePlace);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
@@ -57,7 +57,7 @@ namespace LabWorkOrganization.API.Controllers
         [HttpPost("{subGroupId}/queue/remove")]
         public async Task<IActionResult> RemoveFromQueue([FromRoute] string subGroupId, [FromBody] string queuePlaceId)
         {
-            Result<SubGroup> result = await _subGroupService.RemoveFromQueue(queuePlaceId);
+            Result<SubGroupDto> result = await _subGroupService.RemoveFromQueue(queuePlaceId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);

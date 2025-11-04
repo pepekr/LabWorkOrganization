@@ -99,6 +99,7 @@ export class QueueComponent implements OnInit, OnChanges {
 
     const selectedDate = new Date(dateString + 'T00:00:00');
     console.log(this.subgroup.queue, "check");
+    console.log(this.subgroup, "check subgroup");
     const queue = this.subgroup.queue.filter(q => {
       const qDate = new Date(q.specifiedTime);
       return qDate.getFullYear() === selectedDate.getFullYear() &&
@@ -175,6 +176,7 @@ export class QueueComponent implements OnInit, OnChanges {
         this.loading = false;
       },
       error: (err) => {
+        console.log(err, "ERROR CHECK");
         this.error = err.error?.message || 'Failed to book slot.';
         this.loading = false;
       }
