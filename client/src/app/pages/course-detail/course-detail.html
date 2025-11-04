@@ -41,6 +41,17 @@
     </div>
   </div>
 
+  <div *ngIf="showQueue && selectedSubgroup && course" class="modal">
+    <div class="modal-content modal-content-queue">
+      <app-queue
+        [subgroup]="selectedSubgroup"
+        [course]="course"
+        [tasks]="tasks"
+        (close)="closeQueue()">
+      </app-queue>
+    </div>
+  </div>
+
 
   <hr>
   <h2>Subgroups</h2>
@@ -51,9 +62,9 @@
   <ul *ngIf="!loadingSubgroups && subgroups.length > 0">
     <li *ngFor="let subgroup of subgroups">
       <h3>{{ subgroup.name }}</h3>
-
       <p>Active Days: {{ formatAllowedDays(subgroup.allowedDays) }}</p>
 
+      <button class="queue-btn" (click)="openQueue(subgroup)">View Queue</button>
       <button class="update-btn" (click)="openUpdateSubgroup(subgroup)">Manage Students</button>
       <button class="delete-btn" (click)="deleteSubgroup(subgroup)">Delete</button>
     </li>
@@ -71,10 +82,14 @@
 
   <ul *ngIf="!loadingTasks && tasks.length > 0">
     <li *ngFor="let task of tasks">
-      <h3>{{ task.title }}</h3>
+      <h3 (click)="navigateToTask(task.id)" style="cursor: pointer; color: #1d7ade;">
+        {{ task.title }}
+      </h3>
       <p>Due Date: {{ task.dueDate | date:'mediumDate' }}</p>
       <p>Time Limit: {{ task.timeLimitPerStudent }}</p>
-      <button class="update-btn" (click)="openUpdateTask(task)">Update</button>
+
+      <button class="update-btn" (click)="navigateToTask(task.id)">View Task</button>
+      <button class="update-btn" (click)="openUpdateTask(task)">Settings</button>
       <button class="delete-btn" (click)="deleteTask(task)">Delete</button>
     </li>
   </ul>

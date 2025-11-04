@@ -32,7 +32,7 @@ namespace LabWorkOrganization.API.Controllers
         [HttpGet("getAll")]
         public async Task<IActionResult> GetAllSubgroupsByCourseId([FromRoute] string courseId)
         {
-            Result<IEnumerable<SubGroup>> result = await _subGroupService.GetAllSubgroupsByCourseId(courseId);
+            Result<IEnumerable<SubGroupDto>> result = await _subGroupService.GetAllSubgroupsByCourseId(courseId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);

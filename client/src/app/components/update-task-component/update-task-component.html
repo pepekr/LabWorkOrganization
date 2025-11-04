@@ -4,11 +4,19 @@
 
   <form #taskForm="ngForm" (ngSubmit)="submitForm(taskForm)">
 
-    <fieldset *ngIf="task">
+    <fieldset *ngIf="updatedTask">
 
       <div class="form-group">
         <label for="title">Task Title</label>
         <input type="text" id="title" name="title" required [(ngModel)]="updatedTask.title" />
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description"
+                  name="description"
+                  rows="4"
+                  [(ngModel)]="updatedTask.description"></textarea>
       </div>
 
       <div class="form-group">

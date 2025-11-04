@@ -10,13 +10,14 @@ import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import {
   LabTask,
+  LabTaskCreationalDto, // <-- Use this DTO for update
   LabTaskService
 } from '../../services/LabTaskService/lab-task-service';
 
 @Component({
   selector: 'app-update-task-component',
   templateUrl: './update-task-component.html',
-  styleUrls: ['./update-task-component.css'],
+  styleUrls: ['./update-task-component.css', '../create-subgroup-component/create-subgroup-component.css'], // <-- Import subgroup styles for textarea
   imports: [CommonModule, FormsModule],
   standalone: true
 })
@@ -59,23 +60,14 @@ export class UpdateTaskComponent implements OnChanges {
     this.successMessage = '';
     this.errorMessage = '';
 
-    // Normalize fields
-    const normalizedTask: LabTask = {
-      id: this.updatedTask.id,
-      externalId: this.updatedTask.externalId ?? undefined,
+    // Use the Creational DTO for the update payload
+    const payload: LabTaskCreationalDto = {
       title: this.updatedTask.title?.trim() || '',
-      isSentRequired: !!this.updatedTask.isSentRequired,
+      description: this.updatedTask.description || '', // <-- ADDED
       dueDate: this.inputStringToDate(this.dueDateString),
+      isSentRequired: !!this.updatedTask.isSentRequired,
       timeLimitPerStudent: this.normalizeTime(this.updatedTask.timeLimitPerStudent),
-      courseId: this.updatedTask.courseId
-    };
-
-    const payload = {
-      title: normalizedTask.title,
-      dueDate: normalizedTask.dueDate,
-      isSentRequired: normalizedTask.isSentRequired,
-      timeLimitPerStudent: normalizedTask.timeLimitPerStudent,
-      courseId: normalizedTask.courseId,
+      courseId: this.updatedTask.courseId,
       useExternal: !!this.updatedTask.externalId
     };
 

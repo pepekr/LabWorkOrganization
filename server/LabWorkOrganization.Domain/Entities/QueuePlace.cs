@@ -9,6 +9,8 @@ namespace LabWorkOrganization.Domain.Entities
         [Key] public string Id { get; set; }
 
         public string UserId { get; set; }
+        
+        public string UserName { get; set; }
 
         [JsonIgnore] public User User { get; set; }
 

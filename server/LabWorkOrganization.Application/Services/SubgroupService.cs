@@ -101,24 +101,33 @@ namespace LabWorkOrganization.Application.Services
                 return Result<SubGroup>.Failure($"Error deleting subgroup: {ex.Message}");
             }
         }
-
-        // 🔥 головний метод — отримати всі підгрупи по courseId
-        public async Task<Result<IEnumerable<SubGroup>>> GetAllSubgroupsByCourseId(string courseId)
+        
+        public async Task<Result<IEnumerable<SubGroupDto>>> GetAllSubgroupsByCourseId(string courseId)
         {
             try
             {
                 // MODIFIED: Include Queue and related data
                 IEnumerable<SubGroup> subgroups = await _subGroupRepository.GetAllByCourseIdAsync(courseId,
                     sg => sg.Students,
-                    sg => sg.Queue.Select(q => q.Task),
-                    sg => sg.Queue.Select(q => q.User)
-                ) ?? new List<SubGroup>();
-
-                return Result<IEnumerable<SubGroup>>.Success(subgroups);
+                    sg => sg.Queue
+                );
+                
+                List<SubGroupDto> subgroupsResult = new List<SubGroupDto>();
+                foreach (SubGroup subgroup in subgroups)
+                {
+                    SubGroupDto tempSubgroup = new();
+                    tempSubgroup.Name = subgroup.Name;
+                    tempSubgroup.Id = subgroup.Id;
+                    tempSubgroup.AllowedDays = subgroup.AllowedDays;
+                    tempSubgroup.Students = subgroup.Students;
+                    tempSubgroup.Queue = subgroup.Queue;
+                    subgroupsResult.Add(tempSubgroup);
+                }
+                return Result<IEnumerable<SubGroupDto>>.Success(subgroupsResult);
             }
             catch (Exception ex)
             {
-                return Result<IEnumerable<SubGroup>>.Failure($"Error retrieving subgroups: {ex.Message}");
+                return Result<IEnumerable<SubGroupDto>>.Failure($"Error retrieving subgroups: {ex.Message}");
             }
         }
 
@@ -165,10 +174,8 @@ namespace LabWorkOrganization.Application.Services
                 {
                     throw new Exception("Subgroup not found");
                 }
-
                 // Get current user ID from token
                 string currentUserId = _userService.GetCurrentUserId();
-
                 // Check if user is part of the subgroup
                 if (!subgroup.Students.Any(s => s.Id == currentUserId))
                 {
@@ -182,11 +189,13 @@ namespace LabWorkOrganization.Application.Services
                         throw new UnauthorizedAccessException("User is not a member of this subgroup.");
                     }
                 }
-
+                var studentResult = await _userService.GetUserById(currentUserId);
+                if (!studentResult.IsSuccess && studentResult.Data is not null) throw new Exception("User not found");
                 QueuePlace newQueuePlace = new()
                 {
                     Id = Guid.NewGuid().ToString(),
                     UserId = currentUserId, // <-- Use current user ID
+                    UserName = studentResult.Data.Name,
                     SubGroupId = queuePlace.SubGroupId,
                     TaskId = queuePlace.TaskId, // <-- SET TASK ID
                     SpecifiedTime = queuePlace.SpecifiedTime.ToUniversalTime() // Store as UTC

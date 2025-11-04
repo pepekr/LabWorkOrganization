@@ -45,6 +45,7 @@ namespace LabWorkOrganization.Application.Services
                     Id = Guid.NewGuid().ToString(),
                     Title = labTask.Title,
                     DueDate = labTask.DueDate,
+                    Description = labTask.Description,
                     IsSentRequired = labTask.IsSentRequired,
                     TimeLimitPerStudent = labTask.TimeLimitPerStudent,
                     CourseId = labTask.CourseId
@@ -218,6 +219,7 @@ namespace LabWorkOrganization.Application.Services
 
                 existingLabTask.Title = labTask.Title;
                 existingLabTask.DueDate = labTask.DueDate;
+                existingLabTask.Description = labTask.Description;
                 existingLabTask.IsSentRequired = labTask.IsSentRequired;
                 existingLabTask.TimeLimitPerStudent = labTask.TimeLimitPerStudent;
 

@@ -34,9 +34,9 @@ namespace LabWorkOrganization.API.Controllers
             }
 
             [HttpGet("getById/{id}")]
-            public async Task<IActionResult> GetTaskById([FromRoute] string id, [FromBody] LabTaskGetDto dto)
+            public async Task<IActionResult> GetTaskById([FromRoute] string id, [FromRoute] string courseId, [FromQuery] bool useExternal)
             {
-                Result<LabTask?> result = await _labTaskService.GetTaskById(id, dto.CourseId, dto.UseExternal);
+                Result<LabTask?> result = await _labTaskService.GetTaskById(id, courseId, useExternal);
                 if (!result.IsSuccess)
                 {
                     return BadRequest(result.ErrorMessage);

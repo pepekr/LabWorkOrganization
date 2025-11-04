@@ -7,6 +7,7 @@ export interface LabTask {
   id?: string;
   externalId?: string;
   title: string;
+  description: string;
   dueDate: Date;
   isSentRequired: boolean;
   timeLimitPerStudent: string; // ISO string for TimeSpan
@@ -15,6 +16,7 @@ export interface LabTask {
 
 export interface LabTaskCreationalDto {
   title: string;
+  description: string;
   dueDate: Date;
   isSentRequired: boolean;
   timeLimitPerStudent: string; // "HH:MM:SS"
@@ -23,7 +25,7 @@ export interface LabTaskCreationalDto {
 }
 
 export interface LabTaskAlterDto {
-  labTask: LabTask;
+  courseId: string;
   useExternal: boolean;
 }
 
@@ -68,7 +70,7 @@ export class LabTaskService {
   }
 
   deleteTask(task: LabTask): Observable<any> {
-    const body = {
+    const body: LabTaskAlterDto = { // <-- Use correct DTO
       courseId: task.courseId,
       useExternal: !!task.externalId
     };
@@ -78,6 +80,4 @@ export class LabTaskService {
       withCredentials: true
     });
   }
-
-
 }

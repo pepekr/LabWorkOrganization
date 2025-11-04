@@ -9,6 +9,7 @@ import { CreateTaskComponent } from '../../components/create-task-component/crea
 import { UpdateTaskComponent } from '../../components/update-task-component/update-task-component';
 import { CreateSubgroupComponent } from '../../components/create-subgroup-component/create-subgroup-component';
 import { UpdateSubgroupComponent } from '../../components/update-subgroup-component/update-subgroup-component';
+import { QueueComponent } from '../../components/queue/queue'; // <-- IMPORT NEW COMPONENT
 
 @Component({
   selector: 'app-course-detail',
@@ -22,7 +23,8 @@ import { UpdateSubgroupComponent } from '../../components/update-subgroup-compon
     CreateTaskComponent,
     UpdateTaskComponent,
     CreateSubgroupComponent,
-    UpdateSubgroupComponent
+    UpdateSubgroupComponent,
+    QueueComponent
   ]
 })
 export class CourseDetail implements OnInit {
@@ -43,6 +45,9 @@ export class CourseDetail implements OnInit {
   showCreateSubgroup: boolean = false;
   showUpdateSubgroup: boolean = false;
   selectedSubgroup: SubGroup | null = null;
+
+  // NEW: Modal for Queue
+  showQueue: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -92,6 +97,7 @@ export class CourseDetail implements OnInit {
 
   fetchSubgroups(): void {
     this.loadingSubgroups = true;
+    // We MUST get the full subgroup data here, including the queue
     this.subgroupService.getAllSubgroupsByCourseId(this.courseId).subscribe({
       next: (res) => {
         this.subgroups = res;
@@ -104,6 +110,8 @@ export class CourseDetail implements OnInit {
       }
     });
   }
+
+  // --- Subgroup Methods ---
 
   deleteSubgroup(subgroup: SubGroup): void {
     if (!confirm(`Are you sure you want to delete "${subgroup.name}"?`)) return;
@@ -137,8 +145,24 @@ export class CourseDetail implements OnInit {
   closeUpdateSubgroup(updated: boolean) {
     this.showUpdateSubgroup = false;
     this.selectedSubgroup = null;
-    if (updated) this.fetchSubgroups();
+    if (updated) this.fetchSubgroups(); // Re-fetch to get new student list
   }
+
+  // --- NEW: Queue Methods ---
+
+  openQueue(subgroup: SubGroup) {
+    this.selectedSubgroup = subgroup;
+    this.showQueue = true;
+  }
+
+  closeQueue() {
+    this.showQueue = false;
+    this.selectedSubgroup = null;
+    // Re-fetch subgroups to get updated queue data
+    this.fetchSubgroups();
+  }
+
+  // --- Task Methods ---
 
   deleteTask(task: LabTask): void {
     if (!confirm(`Are you sure you want to delete "${task.title}"?`)) return;
@@ -154,7 +178,6 @@ export class CourseDetail implements OnInit {
     });
   }
 
-  // --- Управління модальними вікнами завдань ---
   openCreateTask() {
     this.showCreateTask = true;
   }
@@ -176,13 +199,25 @@ export class CourseDetail implements OnInit {
     if (updated) this.fetchTasks();
   }
 
+  // --- NEW: Navigation Method ---
+
+  navigateToTask(taskId?: string) {
+    if (!taskId || !this.courseId) return;
+    // Use the new route structure
+    this.router.navigate(['/course', this.courseId, 'task', taskId]);
+  }
+
   /**
-   * Безпечно форматує масив днів тижня у рядок.
+   * Safely formats an array of DayOfWeek numbers into a string.
    */
   formatAllowedDays(days: number[]): string {
     if (!days || days.length === 0) {
       return 'None';
     }
-    return days.join(', ');
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days
+      .map(d => dayNames[d] || 'N/A')
+      .sort((a, b) => dayNames.indexOf(a) - dayNames.indexOf(b)) // Sort them
+      .join(', ');
   }
 }

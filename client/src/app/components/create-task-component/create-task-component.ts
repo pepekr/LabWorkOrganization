@@ -6,7 +6,7 @@ import { LabTaskCreationalDto, LabTaskService } from "../../services/LabTaskServ
 @Component({
   selector: 'app-create-task-component',
   templateUrl: './create-task-component.html',
-  styleUrls: ['./create-task-component.css'],
+  styleUrls: ['./create-task-component.css', '../create-subgroup-component/create-subgroup-component.css'], // <-- Import subgroup styles for textarea
   imports: [CommonModule, FormsModule],
   standalone: true
 })
@@ -16,6 +16,7 @@ export class CreateTaskComponent {
 
   task: Omit<LabTaskCreationalDto, 'courseId' | 'dueDate'> = {
     title: '',
+    description: '', // <-- ADDED
     isSentRequired: false,
     timeLimitPerStudent: '00:30:00',
     useExternal: false
