@@ -52,8 +52,6 @@
     <li *ngFor="let subgroup of subgroups">
       <h3>{{ subgroup.name }}</h3>
 
-      <p>Students: {{ subgroup.students?.length || 0 }}</p>
-
       <p>Active Days: {{ formatAllowedDays(subgroup.allowedDays) }}</p>
 
       <button class="update-btn" (click)="openUpdateSubgroup(subgroup)">Manage Students</button>

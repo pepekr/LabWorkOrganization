@@ -61,22 +61,23 @@ export class LabTaskService {
     });
   }
 
-  updateTask(id: string, taskAlter: LabTaskAlterDto): Observable<LabTask> {
-    return this.http.patch<LabTask>(`${this.getBaseUrl(taskAlter.labTask.courseId)}/update/${id}`, taskAlter, {
+  updateTask(id: string, task: LabTaskCreationalDto): Observable<LabTask> {
+    return this.http.patch<LabTask>(`${this.getBaseUrl(task.courseId)}/update/${id}`, task, {
       withCredentials: true
     });
   }
 
   deleteTask(task: LabTask): Observable<any> {
-    const alterDto: LabTaskAlterDto = {
-      labTask: task,
+    const body = {
+      courseId: task.courseId,
       useExternal: !!task.externalId
     };
 
     return this.http.request('delete', `${this.getBaseUrl(task.courseId)}/delete/${task.id}`, {
-      body: alterDto,
+      body,
       withCredentials: true
     });
   }
+
 
 }

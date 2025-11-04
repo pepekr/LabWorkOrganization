@@ -90,7 +90,6 @@ export class CourseDetail implements OnInit {
     });
   }
 
-  // --- Нові методи для підгруп ---
   fetchSubgroups(): void {
     this.loadingSubgroups = true;
     this.subgroupService.getAllSubgroupsByCourseId(this.courseId).subscribe({

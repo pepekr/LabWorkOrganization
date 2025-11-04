@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { SubgroupService, SubGroup, SubGroupStudentsDto } from "../../services/SubgroupService/subgroup-service";
+import { SubgroupService, SubGroup, SubGroupStudentsDto, SubgroupUser } from "../../services/SubgroupService/subgroup-service";
 
 @Component({
   selector: 'app-update-subgroup-component',
@@ -14,21 +14,57 @@ export class UpdateSubgroupComponent implements OnChanges {
   @Input() subgroup!: SubGroup;
   @Output() close = new EventEmitter<boolean>();
 
-  studentsEmailsRaw: string = ''; // Для <textarea>
+  students: SubgroupUser[] = [];
+  newEmail: string = '';
+
   loading: boolean = false;
   successMessage: string = '';
   errorMessage: string = '';
 
   constructor(private subgroupService: SubgroupService) {}
 
-  // Цей метод заповнить форму, коли компонент отримає дані
   ngOnChanges(changes: SimpleChanges) {
     if (changes['subgroup'] && this.subgroup) {
-      // Заповнюємо textarea email-адресами студентів, які вже є в підгрупі
-      this.studentsEmailsRaw = this.subgroup.students
-        .map(s => s.email) // Беремо email з SubgroupUser
-        .join('\n'); // Кожен email на новому рядку
+      // Клонуємо масив, щоб уникнути мутації @Input
+      // this.students = [...this.subgroup.students];
+      // dynamic students load
+      this.loadStudents();
     }
+  }
+
+  loadStudents() {
+    if (!this.subgroup?.id) return;
+
+    this.loading = true; // Показати індикатор завантаження
+    this.errorMessage = '';
+    this.students = []; // Очистити список перед завантаженням
+
+    this.subgroupService.getStudentsBySubgroupId(this.subgroup.id).subscribe({
+      next: (fetchedStudents) => {
+        this.students = fetchedStudents;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.errorMessage = err.error?.message || 'Failed to load students.';
+        this.loading = false;
+      }
+    });
+  }
+
+  // Додавання студента до списку
+  addStudent() {
+    const email = this.newEmail.trim();
+    if (email && email.includes('@') && !this.students.some(s => s.email === email)) {
+      // Додаємо "фейкового" SubgroupUser - нам потрібен лише email
+      this.students.push({ id: '', name: '', email: email });
+      this.newEmail = '';
+    }
+  }
+
+  // Видалення студента зі списку
+  removeStudent(emailToRemove: string) {
+    this.students = this.students.filter(s => s.email !== emailToRemove);
   }
 
   submitForm(form: NgForm) {
@@ -38,11 +74,8 @@ export class UpdateSubgroupComponent implements OnChanges {
     this.successMessage = '';
     this.errorMessage = '';
 
-    // Конвертуємо textarea назад в масив email-адрес
-    const studentsEmails = this.studentsEmailsRaw
-      .split(/[\n,;]+/)
-      .map(email => email.trim())
-      .filter(email => email.length > 0 && email.includes('@'));
+    // ОНОВЛЕНО: Конвертуємо наш масив студентів назад у масив email-адрес
+    const studentsEmails = this.students.map(student => student.email);
 
     const dto: SubGroupStudentsDto = {
       subGroupId: this.subgroup.id!,
@@ -51,14 +84,16 @@ export class UpdateSubgroupComponent implements OnChanges {
 
     // Викликаємо сервіс
     this.subgroupService.updateStudents(dto, this.subgroup.courseId).subscribe({
-      next: () => {
-        this.successMessage = 'Student list updated successfully!';
-        this.loading = false;
-        setTimeout(() => this.close.emit(true), 1000);
-      },
+      next:
+        () => {
+          this.successMessage = 'Student list updated successfully!';
+          this.loading = false;
+          setTimeout(() => this.close.emit(true), 1000);
+        },
       error: (err) => {
         console.error(err);
-        this.errorMessage = err.error?.message || 'Failed to update students.';
+        this.errorMessage = err.error?.message
+          || 'Failed to update students.';
         this.loading = false;
       }
     });

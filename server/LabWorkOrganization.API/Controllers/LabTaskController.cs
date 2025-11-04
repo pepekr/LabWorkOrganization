@@ -52,7 +52,7 @@ namespace LabWorkOrganization.API.Controllers
             [HttpDelete("delete/{id}")]
             public async Task<IActionResult> DeleteTask([FromRoute] string id, [FromBody] LabTaskAlterDto task)
             {
-                var result = await _labTaskService.DeleteTask(id, task.LabTask.CourseId, task.UseExternal);
+                var result = await _labTaskService.DeleteTask(id, task.CourseId, task.UseExternal);
                 if (!result.IsSuccess)
                 {
                     return BadRequest(result.ErrorMessage);
@@ -61,9 +61,9 @@ namespace LabWorkOrganization.API.Controllers
             }
 
             [HttpPatch("update/{id}")]
-            public async Task<IActionResult> UpdateTask([FromRoute] string id, [FromBody] LabTaskAlterDto task)
+            public async Task<IActionResult> UpdateTask([FromRoute] string id, [FromBody] LabTaskCreationalDto task)
             {
-                var result = await _labTaskService.UpdateTask(task.LabTask, task.UseExternal);
+                var result = await _labTaskService.UpdateTask(id, task, task.UseExternal);
                 if (!result.IsSuccess)
                 {
                     return BadRequest(result.ErrorMessage);

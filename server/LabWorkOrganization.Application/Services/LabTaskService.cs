@@ -172,7 +172,7 @@ namespace LabWorkOrganization.Application.Services
                 return Result<IEnumerable<LabTask>>.Failure($"An error occured while getting the task: ${ex.Message}");
             }
         }
-        public async Task<Result<LabTask>> UpdateTask(LabTask labTask, bool updateExternal = false)
+        public async Task<Result<LabTask>> UpdateTask(string id, LabTaskCreationalDto labTask, bool updateExternal = false)
         {
             try
             {
@@ -182,19 +182,28 @@ namespace LabWorkOrganization.Application.Services
                 {
                     throw new ArgumentException(string.Join("; ", errors));
                 }
-                if (updateExternal && labTask.ExternalId is not null)
+                var existingLabTask = GetTaskById(id, labTask.CourseId, updateExternal).Result.Data;
+                
+                existingLabTask.Title = labTask.Title;
+                existingLabTask.DueDate = labTask.DueDate;
+                existingLabTask.IsSentRequired = labTask.IsSentRequired;
+                existingLabTask.TimeLimitPerStudent = labTask.TimeLimitPerStudent;
+                
+                if (updateExternal && existingLabTask.ExternalId is not null)
                 {
                     var userId = _userService.GetCurrentUserId();
                     var accessTokenResult = await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
                     if (!accessTokenResult.IsSuccess)
                         throw new Exception(accessTokenResult.ErrorMessage);
                     var repo = _externalCrudFactory.Create<LabTask>($"https://classroom.googleapis.com/v1/courses/{labTask.CourseId}/courseWork");
-
-                    await repo.UpdateAsync(labTask, labTask.ExternalId);
+                    
+                    
+                    await repo.UpdateAsync(existingLabTask, existingLabTask.ExternalId);
                 }
-                _crudRepository.Update(labTask);
+                
+                _crudRepository.Update(existingLabTask);
                 await _unitOfWork.SaveChangesAsync();
-                return Result<LabTask>.Success(labTask);
+                return Result<LabTask>.Success(existingLabTask);
             }
             catch (Exception ex)
             {

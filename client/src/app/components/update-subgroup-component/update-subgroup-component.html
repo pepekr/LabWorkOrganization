@@ -4,18 +4,37 @@
 
   <form #subgroupForm="ngForm" (ngSubmit)="submitForm(subgroupForm)">
 
-    <div class="form-group">
-      <label for="studentsEmails">Student Emails</label>
-      <textarea
-        id="studentsEmails"
-        name="studentsEmails"
-        rows="10"
-        placeholder="Enter emails separated by commas or new lines"
-        [(ngModel)]="studentsEmailsRaw"
-        [ngModelOptions]="{standalone: true}">
-      </textarea>
+    <div class="form-group add-student-group">
+      <label for="newEmail">Add Student Email</label>
+      <div class="add-controls">
+        <input type="email"
+               id="newEmail"
+               name="newEmail"
+               placeholder="student@example.com"
+               [(ngModel)]="newEmail"
+               [ngModelOptions]="{standalone: true}" />
+        <button type="button" class="add-btn" (click)="addStudent()">Add</button>
+      </div>
     </div>
 
+    <div class="form-group">
+      <label>Current Students ({{ students.length }})</label>
+
+      <div *ngIf="loading" class="message">
+        Loading students...
+      </div>
+
+      <ul class="student-list" *ngIf="!loading && students.length > 0; else noStudents">
+        <li *ngFor="let student of students">
+          <span>{{ student.email }}</span>
+          <button type="button" class="remove-btn" (click)="removeStudent(student.email)">×</button>
+        </li>
+      </ul>
+
+      <ng-template #noStudents>
+        <p class="no-students-text" *ngIf="!loading">No students added yet.</p>
+      </ng-template>
+    </div>
     <button type="submit" [disabled]="loading">Update Students</button>
 
     <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>

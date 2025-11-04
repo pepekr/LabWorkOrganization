@@ -1,79 +1,116 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnChanges,
+  SimpleChanges
+} from '@angular/core';
 import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { LabTask, LabTaskAlterDto, LabTaskService } from "../../services/LabTaskService/lab-task-service";
+import {
+  LabTask,
+  LabTaskService
+} from '../../services/LabTaskService/lab-task-service';
 
 @Component({
   selector: 'app-update-task-component',
   templateUrl: './update-task-component.html',
-  styleUrls: ['./update-task-component.css'], // Використаємо стилі від 'update-course'
+  styleUrls: ['./update-task-component.css'],
   imports: [CommonModule, FormsModule],
   standalone: true
 })
 export class UpdateTaskComponent implements OnChanges {
-  @Input() task!: LabTask; // Отримуємо повний об'єкт завдання
+  @Input() task!: LabTask; // Original task from parent
   @Output() close = new EventEmitter<boolean>();
 
-  // Створюємо копію для редагування
-  updatedTask!: LabTask;
-  dueDateString: string = '';
-
-  loading: boolean = false;
-  successMessage: string = '';
-  errorMessage: string = '';
+  updatedTask: LabTask = {} as LabTask; // Editable copy
+  dueDateString: string = ''; // For <input type="date">
+  loading = false;
+  successMessage = '';
+  errorMessage = '';
 
   constructor(private labTaskService: LabTaskService) {}
 
-  // Цей метод спрацює, коли Angular передасть [task]
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges(changes: SimpleChanges): void {
     if (changes['task'] && this.task) {
-      // Клонуємо об'єкт, щоб не змінювати оригінал
       this.updatedTask = { ...this.task };
       this.dueDateString = this.dateToInputString(this.updatedTask.dueDate);
     }
   }
 
-  // --- Хелпери для дати ---
-  dateToInputString(date: Date): string {
-    return new Date(date).toISOString().split('T')[0];
+  // --- Helpers for converting dates ---
+  private dateToInputString(date: any): string {
+    if (!date) return '';
+    const parsed = new Date(date);
+    if (isNaN(parsed.getTime())) return '';
+    return parsed.toISOString().split('T')[0];
   }
 
-  inputStringToDate(dateStr: string): Date {
+  private inputStringToDate(dateStr: string): Date {
     return new Date(dateStr + 'T12:00:00Z');
   }
-  // --- ---
 
-  submitForm(form: NgForm) {
+  // --- Submit handler ---
+  submitForm(form: NgForm): void {
     if (!form.valid) return;
 
     this.loading = true;
     this.successMessage = '';
     this.errorMessage = '';
 
-    // Оновлюємо дату в нашому клонованому об'єкті
-    this.updatedTask.dueDate = this.inputStringToDate(this.dueDateString);
-
-    // Готуємо DTO для оновлення
-    const alterDto: LabTaskAlterDto = {
-      labTask: this.updatedTask,
-      useExternal: !!this.updatedTask.externalId // Визначаємо прапор на основі наявності ID
+    // Normalize fields
+    const normalizedTask: LabTask = {
+      id: this.updatedTask.id,
+      externalId: this.updatedTask.externalId ?? undefined,
+      title: this.updatedTask.title?.trim() || '',
+      isSentRequired: !!this.updatedTask.isSentRequired,
+      dueDate: this.inputStringToDate(this.dueDateString),
+      timeLimitPerStudent: this.normalizeTime(this.updatedTask.timeLimitPerStudent),
+      courseId: this.updatedTask.courseId
     };
 
-    this.labTaskService.updateTask(this.updatedTask.id!, alterDto).subscribe({
+    const payload = {
+      title: normalizedTask.title,
+      dueDate: normalizedTask.dueDate,
+      isSentRequired: normalizedTask.isSentRequired,
+      timeLimitPerStudent: normalizedTask.timeLimitPerStudent,
+      courseId: normalizedTask.courseId,
+      useExternal: !!this.updatedTask.externalId
+    };
+
+    console.log('%c[UPDATE TASK] Payload sent to backend:', 'color: yellow', payload);
+    console.log('%c[UPDATE TASK] Raw JSON:', 'color: orange', JSON.stringify(payload, null, 2));
+
+    this.labTaskService.updateTask(this.updatedTask.id!, payload).subscribe({
       next: () => {
         this.successMessage = 'Task updated successfully!';
         this.loading = false;
         setTimeout(() => this.close.emit(true), 1000);
       },
       error: (err) => {
-        console.error(err.error);
-        this.errorMessage = err.error?.message || 'Failed to update task.';
+        console.error('Backend error:', err);
+        this.errorMessage =
+          err.error?.message ||
+          err.error ||
+          'Failed to update task. Please try again.';
         this.loading = false;
       }
     });
   }
 
-  cancel() {
+  // --- Utility: normalize time string ---
+  private normalizeTime(value: string | null | undefined): string {
+    if (!value) return '00:00:00';
+    const match = value.match(/^(\d{1,2}):(\d{1,2}):(\d{1,2})$/);
+    if (match) {
+      const [_, h, m, s] = match;
+      return `${h.padStart(2, '0')}:${m.padStart(2, '0')}:${s.padStart(2, '0')}`;
+    }
+    return '00:00:00';
+  }
+
+  cancel(): void {
     this.close.emit(false);
   }
 }

@@ -14,7 +14,7 @@ export interface SubgroupUser {
 export interface SubGroup {
   id?: string;
   name: string;
-  allowedDays: number[]; // <-- ЗМІНЕНО
+  allowedDays: number[];
   students: SubgroupUser[];
   courseId: string;
   queue: any[]; // (QueuePlace[])
@@ -23,7 +23,7 @@ export interface SubGroup {
 // DTO для СТВОРЕННЯ підгрупи
 export interface SubGroupCreationalDto {
   name: string;
-  allowedDays: number[]; // <-- ЗМІНЕНО
+  allowedDays: number[];
   studentsEmails: string[];
   courseId: string;
 }
@@ -39,9 +39,9 @@ export interface SubGroupStudentsDto {
 })
 export class SubgroupService {
   private getBaseUrl(courseId: string) {
-    // URL відповідає вашому SubGroupController.cs
     return `${environment.backendUrl}/api/courses/${courseId}/subgroups`;
   }
+  private userApiUrl = `${environment.backendUrl}/api/users`;
 
   constructor(private http: HttpClient) {}
 
@@ -61,7 +61,6 @@ export class SubgroupService {
 
   /** Оновити список студентів у підгрупі */
   updateStudents(dto: SubGroupStudentsDto, courseId: string): Observable<SubGroup> {
-    // Цей ендпоінт ми додали у SubGroupController.cs
     const url = `${this.getBaseUrl(courseId)}/${dto.subGroupId}/students`;
     return this.http.put<SubGroup>(url, dto, {
       withCredentials: true
@@ -70,8 +69,13 @@ export class SubgroupService {
 
   /** Видалити підгрупу */
   deleteSubgroup(subgroupId: string, courseId: string): Observable<any> {
-    // Цей ендпоінт ми додали у SubGroupController.cs
     return this.http.delete(`${this.getBaseUrl(courseId)}/${subgroupId}`, {
+      withCredentials: true
+    });
+  }
+
+  getStudentsBySubgroupId(subgroupId: string): Observable<SubgroupUser[]> {
+    return this.http.get<SubgroupUser[]>(`${this.userApiUrl}/subgroup/${subgroupId}`, {
       withCredentials: true
     });
   }
