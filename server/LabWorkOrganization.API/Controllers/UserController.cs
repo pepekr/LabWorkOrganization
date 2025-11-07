@@ -29,5 +29,16 @@ namespace LabWorkOrganization.API.Controllers
 
             return Ok(a.Data);
         }
+        
+        [HttpGet("student/courses")]
+        public async Task<IActionResult> GetStudentCourses()
+        {
+            Result<IEnumerable<Course>> result = await _userService.GetStudentCoursesAsync();
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
+        }
     }
 }

@@ -29,6 +29,7 @@ export interface CourseAlterDto {
 })
 export class CourseService {
   private readonly baseUrl = `${environment.backendUrl}/api/courses`;
+  private readonly userBaseUrl = `${environment.backendUrl}/api/users`;
 
   constructor(private http: HttpClient) {}
 
@@ -60,5 +61,9 @@ export class CourseService {
     return this.http.request('delete', `${this.baseUrl}/delete/${id}`, {
       body: isExternalCourse,withCredentials:true
     });
+  }
+
+  getStudentCourses(): Observable<Course[]> {
+    return this.http.get<Course[]>(`${this.userBaseUrl}/student/courses`, { withCredentials: true });
   }
 }
