@@ -49,10 +49,11 @@ namespace LabWorkOrganization.API.Controllers
             return BadRequest(result.ErrorMessage);
         }
 
-
+        
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegistrationDto)
         {
+            
             Result<JWTTokenDto> result = await _authService.HandleRegistration(userRegistrationDto);
             if (result.IsSuccess && result.Data is not null)
             {
