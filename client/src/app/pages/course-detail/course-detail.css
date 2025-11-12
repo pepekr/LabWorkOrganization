@@ -50,3 +50,12 @@ hr {
 .modal-content-queue {
   max-width: 640px; /* Wider */
 }
+
+/* CAUTION! BITASIK ADDED HIS SHIT d0wn HERE!! */
+/* buttons now on opposite sides, isnt that cool?! */
+.task-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+

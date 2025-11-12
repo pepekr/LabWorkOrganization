@@ -80,6 +80,21 @@ namespace LabWorkOrganization.API.Controllers
 
                 return Ok(result.Data);
             }
+
+            // new method 4 task searching
+            [HttpGet("search")]
+            public async Task<IActionResult> SearchTasks([FromRoute] string courseId,
+                [FromQuery] string? title,
+                [FromQuery] DateTime? dueDate,
+                [FromQuery] bool useExternal)
+            {
+                Result<IEnumerable<LabTask>> result = await _labTaskService.SearchTask(courseId, title, dueDate, useExternal);
+                if (!result.IsSuccess)
+                {
+                    return BadRequest(result.ErrorMessage);
+                }
+                return Ok(result.Data);
+            }
         }
     }
 }

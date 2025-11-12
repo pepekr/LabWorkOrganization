@@ -1,0 +1,25 @@
+<div class="create-course-form">
+  <h2>Search Tasks</h2>
+  <button type="button" class="close-btn" (click)="cancel()">×</button>
+
+  <div>
+    <label class="form-group">
+      Title (start end):
+      <input type="text" [(ngModel)]="title" placeholder="lab x">
+    </label>
+
+    <label class="form-group">
+      Due Date:
+      <input type="date" [(ngModel)]="dueDate">
+    </label>
+
+    <label class="form-group">
+      Use External Source:
+      <input type="checkbox" [(ngModel)]="useExternal">
+    </label>
+
+    <div class="actions">
+      <button (click)="searchTasks()">Search</button>
+    </div>
+  </div>
+</div>
