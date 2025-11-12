@@ -80,4 +80,17 @@ export class LabTaskService {
       withCredentials: true
     });
   }
+  // search
+  searchTasks(courseId: string, title?: string, dueDate?: Date, useExternal: boolean = false): Observable<LabTask[]> {
+    const params: any = {};
+
+    if (title) params.title = title;
+    if (dueDate) params.dueDate = dueDate.toISOString();
+    params.useExternal = useExternal;
+
+    return this.http.get<LabTask[]>(`${this.getBaseUrl(courseId)}/search`, {
+      params,
+      withCredentials: true
+    });
+  }
 }

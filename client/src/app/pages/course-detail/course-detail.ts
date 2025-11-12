@@ -10,6 +10,7 @@ import { UpdateTaskComponent } from '../../components/update-task-component/upda
 import { CreateSubgroupComponent } from '../../components/create-subgroup-component/create-subgroup-component';
 import { UpdateSubgroupComponent } from '../../components/update-subgroup-component/update-subgroup-component';
 import { QueueComponent } from '../../components/queue/queue'; // <-- IMPORT NEW COMPONENT
+import { SearchTaskComponent } from '../../components/search-task-component/search-task-component'; // new for search
 
 @Component({
   selector: 'app-course-detail',
@@ -24,7 +25,8 @@ import { QueueComponent } from '../../components/queue/queue'; // <-- IMPORT NEW
     UpdateTaskComponent,
     CreateSubgroupComponent,
     UpdateSubgroupComponent,
-    QueueComponent
+    QueueComponent,
+    SearchTaskComponent
   ]
 })
 export class CourseDetail implements OnInit {
@@ -39,6 +41,7 @@ export class CourseDetail implements OnInit {
   // Модальні вікна для завдань
   showCreateTask: boolean = false;
   showUpdateTask: boolean = false;
+  showSearchTask: boolean = false;
   selectedTask: LabTask | null = null;
 
   // Модальні вікна для підгруп
@@ -185,6 +188,30 @@ export class CourseDetail implements OnInit {
   closeCreateTask(taskCreated: boolean) {
     this.showCreateTask = false;
     if (taskCreated) this.fetchTasks();
+  }
+
+  openSearchTask() {
+    this.showSearchTask = true;
+  }
+
+  closeSearchTask() {
+    this.showSearchTask = false;
+  }
+  // search method and additional
+  onSearch(event: { title?: string, dueDate?: Date, useExternal: boolean }) {
+    this.loadingTasks = true;
+    this.labTaskService.searchTasks(this.courseId, event.title, event.dueDate, event.useExternal)
+      .subscribe({
+        next: (res) => {
+          this.tasks = res;
+          this.loadingTasks = false;
+          this.showSearchTask = false;
+        },
+        error: (err) => {
+          console.error('Search failed', err);
+          this.loadingTasks = false;
+        }
+      });
   }
 
   openUpdateTask(task: LabTask) {
