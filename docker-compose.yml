@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  baget:
+    image: loicsharma/baget
+    container_name: baget
+    ports:
+      - "5555:80"
+    environment:
+      - ApiKey=NUGET-SERVER-API-KEY
+    volumes:
+      - ./baget-data:/var/baget
