@@ -43,7 +43,13 @@ namespace LabWorkOrganization.API.Controllers
                 Response.Cookies.Append("access_token", result.Data.AccessToken, accessCookieOptions);
                 Response.Cookies.Append("refresh_token", result.Data.RefreshToken, refreshCookieOptions);
 
-                return Ok(new { message = "Login successful" });
+                return Ok(new AuthResponseDto
+                {
+                    Email = userLoginDto.Email,
+                    AccessToken = result.Data.AccessToken,
+                    RefreshToken = result.Data.RefreshToken
+
+                });
             }
 
             return BadRequest(result.ErrorMessage);
@@ -75,7 +81,13 @@ namespace LabWorkOrganization.API.Controllers
                 Response.Cookies.Append("access_token", result.Data.AccessToken, accessCookieOptions);
                 Response.Cookies.Append("refresh_token", result.Data.RefreshToken, refreshCookieOptions);
 
-                return Ok(new { message = "Login successful" });
+                return Ok(new AuthResponseDto
+                {
+                    Email = userRegistrationDto.Email,
+                    AccessToken = result.Data.AccessToken,
+                    RefreshToken = result.Data.RefreshToken
+
+                });
             }
 
             return BadRequest(result.ErrorMessage);

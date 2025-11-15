@@ -117,44 +117,46 @@ app.UseCors(c => c
 );
 app.Use(async (context, next) =>
 {
-    string? accessToken = context.Request.Cookies["access_token"];
-    string? refreshToken = context.Request.Cookies["refresh_token"];
 
-    // Only refresh if access token is missing or expired, and we have a refresh token
+    string? accessToken = context.Request.Cookies["access_token"]
+                          ?? context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+
+    string? refreshToken = context.Request.Cookies["refresh_token"]
+                           ?? context.Request.Headers["X-Refresh-Token"].FirstOrDefault();
+
+
     if (string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
     {
         Console.WriteLine("[AUTH REFRESH] 🌀 Attempting token refresh...");
 
-        IAuthService
-            refreshService =
-                context.RequestServices.GetRequiredService<IAuthService>(); // whatever service has HandleRefresh
-        Result<JWTTokenDto> refreshResult = await refreshService.HandleRefresh(refreshToken);
+        var authService = context.RequestServices.GetRequiredService<IAuthService>();
+        Result<JWTTokenDto> refreshResult = await authService.HandleRefresh(refreshToken);
 
         if (refreshResult.IsSuccess && refreshResult.Data is not null)
         {
             string newAccess = refreshResult.Data.AccessToken;
             string newRefresh = refreshResult.Data.RefreshToken;
 
-            // Set new cookies
+            // 3️⃣ Set new cookies
             context.Response.Cookies.Append("access_token", newAccess, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.None, // adjust if needed (Strict/Lax/None)
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddMinutes(60)
             });
 
-            context.Response.Cookies.Append("refresh_token", newRefresh,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.None,
-                    Expires = DateTime.UtcNow.AddDays(10)
-                });
+            context.Response.Cookies.Append("refresh_token", newRefresh, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddDays(10)
+            });
 
             Console.WriteLine("[AUTH REFRESH] ✅ Tokens refreshed successfully.");
-            // inject new token into the context for JwtBearer to pick up
+
+            // 4️⃣ Inject new access token into the request headers for downstream middleware
             context.Request.Headers["Authorization"] = $"Bearer {newAccess}";
         }
         else
@@ -163,6 +165,7 @@ app.Use(async (context, next) =>
         }
     }
 
+    // 5️⃣ Continue request pipeline
     await next();
 });
 
