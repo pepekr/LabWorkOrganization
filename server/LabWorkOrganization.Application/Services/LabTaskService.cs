@@ -288,6 +288,64 @@ namespace LabWorkOrganization.Application.Services
                 return Result<LabTask>.Failure($"An error occured while deleting the task: ${ex.Message}");
             }
         }
+        
+        // new method 4 task searching
+        public async Task<Result<IEnumerable<LabTask>>> SearchTask(string courseId, string? title, DateTime? dueDate,
+            bool useExternal)
+        {
+            try
+            {
+                string titleStart = string.Empty;
+                string titleEnd = string.Empty;
+                if (!string.IsNullOrEmpty(title))
+                {
+                    string[] parts = title.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 2)
+                        (titleStart, titleEnd) = (parts[0], parts[1]);
+                    else
+                        (titleStart, titleEnd) = (parts[0], string.Empty);
+                }
+                if (useExternal)
+                {
+                    string userId = _userService.GetCurrentUserId();
+                    Result<string> accessTokenResult =
+                        await _externalTokenService.GetAccessTokenFromDbAsync(userId, "Google");
+                    if (!accessTokenResult.IsSuccess)
+                    {
+                        throw new Exception(accessTokenResult.ErrorMessage);
+                    }
+                    IExternalCrudRepo<LabTask> repo =
+                        _externalCrudFactory.Create<LabTask>(
+                            $"https://classroom.googleapis.com/v1/courses/{courseId}/courseWork");
+
+                    var externalTasks = await repo.GetAllAsync();
+                    var filteredExternalTasks = externalTasks
+                        .Where(t =>
+                            (string.IsNullOrEmpty(title) || 
+                             (t.Title.ToLowerInvariant().StartsWith(titleStart.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase)
+                              && t.Title.ToLowerInvariant().EndsWith(titleEnd.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase))) &&
+                            (!dueDate.HasValue || t.DueDate >= dueDate))
+                        .ToList();
+
+                    return Result<IEnumerable<LabTask>>.Success(filteredExternalTasks);
+                }
+
+                var tasks = await _crudRepository.GetAllAsync();
+                var filteredTasks = tasks
+                    .Where(t => // пошук за початком та кінцем назви та за датою
+                        (string.IsNullOrEmpty(title) || 
+                         (t.Title.ToLowerInvariant().StartsWith(titleStart.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase)
+                          && t.Title.ToLowerInvariant().EndsWith(titleEnd.ToLowerInvariant(), StringComparison.OrdinalIgnoreCase))) &&
+                        (!dueDate.HasValue || t.DueDate >= dueDate.Value))
+                    .ToList();
+
+                return Result<IEnumerable<LabTask>>.Success(filteredTasks);
+            }
+            catch (Exception ex)
+            {
+                return Result<IEnumerable<LabTask>>.Failure($"An error occurred while searching tasks: {ex.Message}");
+            }
+        }
 
         private async Task IsCurrentUserOwnerOfCourse(string courseId)
         {
@@ -302,8 +360,7 @@ namespace LabWorkOrganization.Application.Services
             {
                 throw new UnauthorizedAccessException("User not authorized to perform this action");
             }
-
-            ;
+            
         }
     }
 }

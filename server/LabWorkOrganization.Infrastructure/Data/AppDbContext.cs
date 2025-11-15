@@ -5,6 +5,11 @@ namespace LabWorkOrganization.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
+        /* migrations commands so i dont need to look 4 them in chatgpt
+         dotnet ef migrations remove --project .\server\LabWorkOrganization.Infrastructure --startup-project .\server\LabWorkOrganization.API
+         dotnet ef migrations add migration00101010 --project .\server\LabWorkOrganization.Infrastructure --startup-project .\server\LabWorkOrganization.API
+         dotnet ef database update --project .\server\LabWorkOrganization.Infrastructure --startup-project .\server\LabWorkOrganization.API 
+         */
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -22,9 +27,37 @@ namespace LabWorkOrganization.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            // no cascades for sql server (idk is it work properly)
+            if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+            {
+                modelBuilder.Entity<QueuePlace>()
+                    .HasOne(q => q.Task)
+                    .WithMany()
+                    .HasForeignKey(q => q.TaskId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                modelBuilder.Entity<QueuePlace>()
+                    .HasOne(q => q.User)
+                    .WithMany()
+                    .HasForeignKey(q => q.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                modelBuilder.Entity<QueuePlace>()
+                    .HasOne(q => q.SubGroup)
+                    .WithMany()
+                    .HasForeignKey(q => q.SubGroupId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                modelBuilder.Entity<Course>()
+                    .HasOne(c => c.Owner)
+                    .WithMany()
+                    .HasForeignKey(c => c.OwnerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            }
         }
     }
 }

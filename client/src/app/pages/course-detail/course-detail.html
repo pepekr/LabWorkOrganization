@@ -75,9 +75,13 @@
     No subgroups available for this course.
   </div>
 
+
   <hr>
   <h2>Tasks</h2>
-  <button class="create-btn" (click)="openCreateTask()">+ Create New Task</button>
+  <ul class = "task-buttons">
+    <button class="create-btn" (click)="openCreateTask()">+ Create New Task</button>
+    <button class="create-btn" (click)="openSearchTask()">? Search Task</button>
+  </ul>
 
   <div *ngIf="loadingTasks">Loading tasks...</div>
 
@@ -89,7 +93,7 @@
       <p>Due Date: {{ task.dueDate | date:'mediumDate' }}</p>
       <p>Time Limit: {{ task.timeLimitPerStudent }}</p>
 
-      <button class="update-btn" (click)="navigateToTask(task.id)">View Task</button>
+      <button class="queue-btn" (click)="navigateToTask(task.id)">View Task</button>
       <button class="update-btn" (click)="openUpdateTask(task)">Settings</button>
       <button class="delete-btn" (click)="deleteTask(task)">Delete</button>
     </li>
@@ -97,5 +101,14 @@
 
   <div *ngIf="!loadingTasks && tasks.length === 0">
     No tasks available for this course.
+  </div>
+
+  <div *ngIf="showSearchTask" class="modal">
+    <div class="modal-content">
+      <app-search-task-component
+        (close)="closeSearchTask()"
+        (search)="onSearch($event)">
+      </app-search-task-component>
+    </div>
   </div>
 </div>
