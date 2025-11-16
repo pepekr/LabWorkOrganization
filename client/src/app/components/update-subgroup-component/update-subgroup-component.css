@@ -1,0 +1,92 @@
+@import '../update-course-component/update-course-component.css';
+
+/* Нові стилі для динамічного списку */
+
+/* Контейнер для поля вводу та кнопки "Add" */
+.add-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.add-controls input {
+  flex-grow: 1; /* Поле вводу займає весь доступний простір */
+  margin-top: 0;
+}
+
+.add-btn {
+  padding: 9px 15px;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  flex-shrink: 0; /* Кнопка не буде стискатися */
+}
+
+.add-btn:hover {
+  background: #27ae60;
+}
+
+/* Список студентів */
+.student-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.student-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.student-list li:last-child {
+  border-bottom: none;
+}
+
+.student-list span {
+  word-break: break-all;
+}
+
+.remove-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+  margin-left: 10px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.remove-btn:hover {
+  background: #c0392b;
+}
+
+.no-students-text {
+  font-size: 14px;
+  color: #777;
+  text-align: center;
+  margin-top: 15px;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px dashed #ddd;
+}

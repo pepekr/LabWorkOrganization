@@ -1,7 +1,7 @@
 using LabWorkOrganization.Domain.Intefaces;
 using LabWorkOrganization.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-
+using System.Linq.Expressions;
 
 public class GenericRepo<TEntity> : ICrudRepository<TEntity>
     where TEntity : class
@@ -20,10 +20,21 @@ public class GenericRepo<TEntity> : ICrudRepository<TEntity>
         await _dbSet.AddAsync(entity);
         return entity;
     }
-    public async Task<TEntity?> GetByIdAsync(string id)
+
+    public async Task<TEntity?> GetByIdAsync(
+        string id,
+        params Expression<Func<TEntity, object>>[] includes)
     {
-        return await _dbSet.FindAsync(id);
+        IQueryable<TEntity> query = _dbSet;
+
+        foreach (Expression<Func<TEntity, object>> include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.FirstOrDefaultAsync(e => EF.Property<string>(e, "Id") == id);
     }
+
 
     public async Task<IEnumerable<TEntity>> GetAllAsync()
     {

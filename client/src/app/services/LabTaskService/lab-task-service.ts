@@ -1,0 +1,96 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from "../../../environments/environment.development";
+
+export interface LabTask {
+  id?: string;
+  externalId?: string;
+  title: string;
+  description: string;
+  dueDate: Date;
+  isSentRequired: boolean;
+  timeLimitPerStudent: string; // ISO string for TimeSpan
+  courseId: string;
+}
+
+export interface LabTaskCreationalDto {
+  title: string;
+  description: string;
+  dueDate: Date;
+  isSentRequired: boolean;
+  timeLimitPerStudent: string; // "HH:MM:SS"
+  courseId: string;
+  useExternal: boolean;
+}
+
+export interface LabTaskAlterDto {
+  courseId: string;
+  useExternal: boolean;
+}
+
+export interface LabTaskGetDto {
+  courseId: string;
+  useExternal: boolean;
+}
+@Injectable({
+  providedIn: 'root'
+})
+export class LabTaskService {
+  private getBaseUrl(courseId: string) {
+    return `${environment.backendUrl}/api/courses/${courseId}/tasks`;
+  }
+
+  constructor(private http: HttpClient) {}
+
+  getAllTasksByCourseId(courseId: string): Observable<LabTask[]> {
+    return this.http.get<LabTask[]>(`${this.getBaseUrl(courseId)}/getAll`, {
+      withCredentials: true
+    });
+  }
+
+  getTaskById(id: string, courseId: string, useExternal: boolean): Observable<LabTask> {
+    const getDto: LabTaskGetDto = { courseId, useExternal };
+    return this.http.request<LabTask>('get', `${this.getBaseUrl(courseId)}/getById/${id}`, {
+      body: getDto,
+      withCredentials: true
+    });
+  }
+
+  createTask(task: LabTaskCreationalDto): Observable<LabTask> {
+    return this.http.post<LabTask>(`${this.getBaseUrl(task.courseId)}/create`, task, {
+      withCredentials: true
+    });
+  }
+
+  updateTask(id: string, task: LabTaskCreationalDto): Observable<LabTask> {
+    return this.http.patch<LabTask>(`${this.getBaseUrl(task.courseId)}/update/${id}`, task, {
+      withCredentials: true
+    });
+  }
+
+  deleteTask(task: LabTask): Observable<any> {
+    const body: LabTaskAlterDto = { // <-- Use correct DTO
+      courseId: task.courseId,
+      useExternal: !!task.externalId
+    };
+
+    return this.http.request('delete', `${this.getBaseUrl(task.courseId)}/delete/${task.id}`, {
+      body,
+      withCredentials: true
+    });
+  }
+  // search
+  searchTasks(courseId: string, title?: string, dueDate?: Date, useExternal: boolean = false): Observable<LabTask[]> {
+    const params: any = {};
+
+    if (title) params.title = title;
+    if (dueDate) params.dueDate = dueDate.toISOString();
+    params.useExternal = useExternal;
+
+    return this.http.get<LabTask[]>(`${this.getBaseUrl(courseId)}/search`, {
+      params,
+      withCredentials: true
+    });
+  }
+}

@@ -8,6 +8,7 @@ export interface Course {
   externalId?: string;
   ownerId?: string;
   name: string;
+  description?: string;
   lessonDuration: string; // ISO string for TimeSpan equivalent
   endOfCourse: Date;
 }
@@ -19,16 +20,23 @@ export interface CourseCreationalDto {
   useExternal: boolean;
 }
 
+export interface CourseCreationalDtoV2 extends CourseCreationalDto {
+  description?: string;
+}
+
 export interface CourseAlterDto {
   course: Course;
   useExternal: boolean;
 }
 
+
 @Injectable({
   providedIn: 'root'
 })
 export class CourseService {
-  private readonly baseUrl = `${environment.backendUrl}/api/courses`;
+  private readonly baseUrl = `${environment.backendUrl}/api/${environment.apiVersion}/courses`;
+
+  private readonly userBaseUrl = `${environment.backendUrl}/api/users`;
 
   constructor(private http: HttpClient) {}
 
@@ -45,7 +53,16 @@ export class CourseService {
   }
 
   /** Create a new course */
-  createCourse(course: CourseCreationalDto): Observable<Course> {
+  createCourse(course: CourseCreationalDtoV2): Observable<Course> {
+    if (environment.apiVersion === 'v1') {
+      const redactedCourse = {
+        name: course.name,
+        lessonDuration: course.lessonDuration,
+        endOfCourse: course.endOfCourse,
+        useExternal: course.useExternal
+      }
+      return this.http.post<Course>(`${this.baseUrl}/create`, redactedCourse,{ withCredentials:true});
+    }
     return this.http.post<Course>(`${this.baseUrl}/create`, course,{ withCredentials:true});
   }
 
@@ -60,5 +77,9 @@ export class CourseService {
     return this.http.request('delete', `${this.baseUrl}/delete/${id}`, {
       body: isExternalCourse,withCredentials:true
     });
+  }
+
+  getStudentCourses(): Observable<Course[]> {
+    return this.http.get<Course[]>(`${this.userBaseUrl}/student/courses`, { withCredentials: true });
   }
 }

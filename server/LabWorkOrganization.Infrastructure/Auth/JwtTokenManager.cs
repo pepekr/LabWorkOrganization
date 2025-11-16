@@ -18,7 +18,7 @@ namespace LabWorkOrganization.Infrastructure.Auth
             // Fetch secret key from environment variables
             string secretKey = Environment.GetEnvironmentVariable("JWT_SECRET")!;
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256); // HMAC SHA256 signing
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             // Define token payload (claims) and expiration
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -27,16 +27,16 @@ namespace LabWorkOrganization.Infrastructure.Auth
                 {
                     new Claim("email", email),
                     new Claim("id", id),
-                    new Claim("externalId", externalServiceId ?? string.Empty) // Empty string if external ID is null
+                    new Claim("externalId", externalServiceId ?? string.Empty)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(expirationInMinutes),
                 SigningCredentials = credentials,
-                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"), // Intended recipients
-                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") // Token issuer
+                Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
+                Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
             };
 
             var tokenHandler = new JsonWebTokenHandler();
-            string token = tokenHandler.CreateToken(tokenDescriptor); // Create JWT
+            string token = tokenHandler.CreateToken(tokenDescriptor);
             return token;
         }
 
@@ -59,10 +59,10 @@ namespace LabWorkOrganization.Infrastructure.Auth
                 IssuerSigningKey = new SymmetricSecurityKey(key),
 
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero // No tolerance for expiration
+                ClockSkew = TimeSpan.Zero
             }, out SecurityToken validatedToken);
 
-            return principal; // Return principal containing claims from the token
+            return principal;
         }
     }
 }

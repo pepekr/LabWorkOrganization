@@ -1,0 +1,61 @@
+@import '../home/home.css';
+
+/* Additional styles for this page */
+.course-list {
+  max-width: 900px; /* A bit wider for more info */
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 30px 0;
+}
+
+/* Styles for "Update" button (blue) */
+.update-btn {
+  background-color: #3498db; /* Blue */
+  margin-left: 10px;
+}
+
+.update-btn:hover {
+  background-color: #2980b9;
+}
+
+/* NEW: Styles for "Queue" button (purple) */
+.queue-btn {
+  background-color: #8e44ad; /* Purple */
+  margin-left: 10px;
+}
+.queue-btn:hover {
+  background-color: #732d91;
+}
+
+
+/* Override delete-btn from home.css if needed */
+.delete-btn {
+  background-color: #e74c3c;
+  margin-left: 10px;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Make h3 title clickable */
+.course-list li h3[style*="cursor: pointer"]:hover {
+  text-decoration: underline;
+}
+
+/* NEW: Wider modal for queue */
+.modal-content-queue {
+  max-width: 640px; /* Wider */
+}
+
+/* CAUTION! BITASIK ADDED HIS SHIT d0wn HERE!! */
+/* buttons now on opposite sides, isnt that cool?! */
+.task-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+

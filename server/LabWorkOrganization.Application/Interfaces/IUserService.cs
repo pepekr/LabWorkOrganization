@@ -9,6 +9,7 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<User>> AddUser(UserRegisterDto user);
         Task<Result<User>> DeleteUser(string id);
         Task<Result<IEnumerable<User>>> GetAllUsers();
+        Task<Result<IEnumerable<User>>> GetAllUsersBySubGroupId(string subGroupId);
 
         Task<IEnumerable<User>> GetAllUsersByCourseId(string courseId, bool external = false);
         string GetCurrentUserId();
@@ -16,5 +17,7 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<User?>> GetUserByEmail(string email);
         Task<Result<User?>> GetUserById(string id);
         Task<Result<User>> UpdateUser(string id, User updatedUser);
+        
+        Task<Result<IEnumerable<Course>>> GetStudentCoursesAsync();
     }
 }

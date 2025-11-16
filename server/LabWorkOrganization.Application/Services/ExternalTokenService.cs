@@ -9,11 +9,13 @@ namespace LabWorkOrganization.Application.Services
 {
     public class ExternalTokenService : IExternalTokenService
     {
-        private readonly IExternalTokenStorage _tokenStorage;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IExternalTokenValidation _tokenValidation;
         private readonly IExternalTokenProvider _tokenProvider;
-        public ExternalTokenService(IExternalTokenStorage tokenStorage, IUnitOfWork IUnitOfWork, IExternalTokenValidation tokenValidation, IExternalTokenProvider ITokenProvider)
+        private readonly IExternalTokenStorage _tokenStorage;
+        private readonly IExternalTokenValidation _tokenValidation;
+        private readonly IUnitOfWork _unitOfWork;
+
+        public ExternalTokenService(IExternalTokenStorage tokenStorage, IUnitOfWork IUnitOfWork,
+            IExternalTokenValidation tokenValidation, IExternalTokenProvider ITokenProvider)
         {
             _tokenStorage = tokenStorage;
             _unitOfWork = IUnitOfWork;
@@ -25,9 +27,11 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, apiName);
+                ExternalToken? tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, apiName);
                 if (tokenEntity is null)
+                {
                     throw new Exception("Token not found");
+                }
 
                 if (tokenEntity.RefreshToken is null)
                 {
@@ -35,6 +39,7 @@ namespace LabWorkOrganization.Application.Services
                     await _unitOfWork.SaveChangesAsync();
                     throw new Exception("Refresh token was not found, token removed");
                 }
+
                 if (!string.IsNullOrEmpty(tokenEntity.AccessToken))
                 {
                     try
@@ -44,16 +49,23 @@ namespace LabWorkOrganization.Application.Services
                     }
                     catch (SecurityTokenException)
                     {
-                        var refreshedResult = await GetRefreshedToken(tokenEntity.RefreshToken, userId, apiName);
+                        Result<ExternalToken> refreshedResult =
+                            await GetRefreshedToken(tokenEntity.RefreshToken, userId, apiName);
                         if (!refreshedResult.IsSuccess || refreshedResult.Data is null)
+                        {
                             throw new Exception(refreshedResult.ErrorMessage ?? "Failed to refresh token");
+                        }
 
                         return Result<string>.Success(refreshedResult.Data.AccessToken);
                     }
                 }
-                var refreshResult = await GetRefreshedToken(tokenEntity.RefreshToken, userId, apiName);
+
+                Result<ExternalToken> refreshResult =
+                    await GetRefreshedToken(tokenEntity.RefreshToken, userId, apiName);
                 if (!refreshResult.IsSuccess || refreshResult.Data is null)
+                {
                     throw new Exception(refreshResult.ErrorMessage ?? "Failed to refresh token");
+                }
 
                 return Result<string>.Success(refreshResult.Data.AccessToken);
             }
@@ -62,9 +74,10 @@ namespace LabWorkOrganization.Application.Services
                 return Result<string>.Failure(ex.Message);
             }
         }
+
         public async Task<Result<ExternalToken>> SaveTokenAsync(string userId, ExternalTokenDto extTokenDto)
         {
-            Domain.Entities.ExternalToken? tokenEntity = null;
+            ExternalToken? tokenEntity = null;
 
             try
             {
@@ -74,13 +87,13 @@ namespace LabWorkOrganization.Application.Services
                 tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, extTokenDto.ApiName);
                 if (tokenEntity is null)
                 {
-                    tokenEntity = new Domain.Entities.ExternalToken
+                    tokenEntity = new ExternalToken
                     {
                         Id = Guid.NewGuid().ToString(),
                         UserId = userId,
                         ApiName = extTokenDto.ApiName,
                         AccessToken = extTokenDto.AccessToken,
-                        RefreshToken = extTokenDto.RefreshToken,
+                        RefreshToken = extTokenDto.RefreshToken
                     };
                     _tokenStorage.SaveToken(tokenEntity);
                 }
@@ -103,7 +116,9 @@ namespace LabWorkOrganization.Application.Services
             catch (Exception ex)
             {
                 if (tokenEntity != null)
+                {
                     _tokenStorage.RemoveToken(tokenEntity);
+                }
 
                 return Result<ExternalToken>.Failure(ex.Message);
             }
@@ -113,19 +128,18 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var access_token = await _tokenProvider.HandleRefreshAsync(refreshToken);
-                var tokenFromDb = await _tokenStorage.GetAccessTokenAsync(userId, apiName);
-                var tokenObj = new ExternalTokenDto
+                string access_token = await _tokenProvider.HandleRefreshAsync(refreshToken);
+                ExternalToken? tokenFromDb = await _tokenStorage.GetAccessTokenAsync(userId, apiName);
+                ExternalTokenDto tokenObj = new()
                 {
-                    AccessToken = access_token,
-                    RefreshToken = refreshToken,
-                    ApiName = apiName
+                    AccessToken = access_token, RefreshToken = refreshToken, ApiName = apiName
                 };
-                var tokenResult = await SaveTokenAsync(userId, tokenObj);
+                Result<ExternalToken> tokenResult = await SaveTokenAsync(userId, tokenObj);
                 if (!tokenResult.IsSuccess || tokenResult.Data is null)
                 {
                     throw new Exception(tokenResult.ErrorMessage);
                 }
+
                 return Result<ExternalToken>.Success(tokenResult.Data);
             }
             catch (Exception ex)
@@ -138,9 +152,11 @@ namespace LabWorkOrganization.Application.Services
         {
             try
             {
-                var tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, apiName);
+                ExternalToken? tokenEntity = await _tokenStorage.GetAccessTokenAsync(userId, apiName);
                 if (tokenEntity is null)
+                {
                     throw new Exception("Token not found");
+                }
 
                 _tokenStorage.RemoveToken(tokenEntity);
                 await _unitOfWork.SaveChangesAsync();

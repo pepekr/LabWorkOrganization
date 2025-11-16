@@ -11,6 +11,8 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<IEnumerable<LabTask>>> GetAllTasks(string courseId, bool isGetExternal = false);
         Task<Result<IEnumerable<LabTask>>> GetAllTasksByCourseId(string courseId, bool external = false);
         Task<Result<LabTask?>> GetTaskById(string id, string courseId, bool external = false);
-        Task<Result<LabTask>> UpdateTask(LabTask labTask, bool updateExternal = false);
+        Task<Result<LabTask>> UpdateTask(string id, LabTaskCreationalDto labTask, bool updateExternal = false);
+        Task<Result<IEnumerable<LabTask>>> SearchTask(string courseId, string? title, DateTime? dueDate,
+            bool useExternal);
     }
 }

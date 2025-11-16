@@ -21,7 +21,7 @@ namespace LabWorkOrganization.Infrastructure.Auth
         public async Task<ClaimsPrincipal?> ValidateJwtTokenAsync(string token)
         {
             // Fetch public keys from Google for signature validation
-            var keys = await _jwksClient.GetGoogleKeysAsync();
+            IEnumerable<SecurityKey> keys = await _jwksClient.GetGoogleKeysAsync();
 
             var validationParameters = new TokenValidationParameters
             {
@@ -30,7 +30,7 @@ namespace LabWorkOrganization.Infrastructure.Auth
 
                 ValidateAudience = true, // Ensure token is meant for our application
                 ValidAudience = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
-                                ?? throw new Exception("Google id wasnt provided"),
+                                ?? throw new Exception("Google CLIENT ID not provided"),
 
                 ValidateIssuerSigningKey = true, // Verify token signature
                 IssuerSigningKeys = keys, // Keys used to verify the signature
@@ -39,31 +39,28 @@ namespace LabWorkOrganization.Infrastructure.Auth
                 ClockSkew = TimeSpan.FromMinutes(5) // Allow minor clock differences
             };
 
-            var handler = new JwtSecurityTokenHandler();
-
+            JwtSecurityTokenHandler handler = new();
             // Validate token and return claims principal
-            var principal = handler.ValidateToken(token, validationParameters, out _);
+            ClaimsPrincipal principal = handler.ValidateToken(token, validationParameters, out _);
+
             return principal;
         }
 
         // Validates an opaque token (non-JWT) by calling Google's tokeninfo endpoint
         public async Task<ClaimsPrincipal?> ValidateOpaqueTokenAsync(string token, string tokenType)
         {
-            var httpClient = new HttpClient(); // Consider reusing HttpClient for efficiency
-            var result = await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?{tokenType}={token}");
+            using HttpClient httpClient = new(); // Consider reusing HttpClient for efficiency
+            HttpResponseMessage result = await httpClient.GetAsync(
+                $"https://www.googleapis.com/oauth2/v3/tokeninfo?{tokenType}={token}");
 
             if (!result.IsSuccessStatusCode)
-            {
                 throw new SecurityTokenException("Invalid token"); // Token is invalid or expired
-            }
 
             string json = await result.Content.ReadAsStringAsync();
-            var tokenInfo = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+            Dictionary<string, string>? tokenInfo = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
 
             if (tokenInfo is null)
-            {
                 throw new SecurityTokenException("Invalid token"); // Deserialization failed
-            }
 
             // Create claims based on token info returned from Google
             var claims = new List<Claim>
@@ -76,6 +73,7 @@ namespace LabWorkOrganization.Infrastructure.Auth
 
             var identity = new ClaimsIdentity(claims, "GoogleToken"); // Identity using claims
             var principal = new ClaimsPrincipal(identity); // Principal representing the user
+
             return principal;
         }
     }

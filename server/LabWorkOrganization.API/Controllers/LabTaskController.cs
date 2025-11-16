@@ -1,5 +1,7 @@
-using global::LabWorkOrganization.Application.Dtos.LabTaskDtos;
-using global::LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Application.Dtos.LabTaskDtos;
+using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Domain.Entities;
+using LabWorkOrganization.Domain.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +24,7 @@ namespace LabWorkOrganization.API.Controllers
         [HttpGet("getAll")]
         public async Task<IActionResult> GetAllTaskByCourseId([FromRoute] string courseId)
         {
-            var result = await _labTaskService.GetAllTasksByCourseId(courseId);
+            Result<IEnumerable<LabTask>> result = await _labTaskService.GetAllTasksByCourseId(courseId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
@@ -33,9 +35,9 @@ namespace LabWorkOrganization.API.Controllers
         // GET: api/courses/{courseId}/tasks/getById/{id}
         // Retrieves a specific lab task by its ID
         [HttpGet("getById/{id}")]
-        public async Task<IActionResult> GetTaskById([FromRoute] string id, [FromBody] LabTaskGetDto dto)
+        public async Task<IActionResult> GetTaskById([FromRoute] string id, [FromRoute] string courseId, [FromQuery] bool useExternal)
         {
-            var result = await _labTaskService.GetTaskById(id, dto.CourseId, dto.UseExternal);
+            Result<LabTask?> result = await _labTaskService.GetTaskById(id, courseId, useExternal);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
@@ -48,7 +50,7 @@ namespace LabWorkOrganization.API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateTask([FromBody] LabTaskCreationalDto labTask)
         {
-            var result = await _labTaskService.CreateTask(labTask, labTask.UseExternal);
+            Result<LabTask> result = await _labTaskService.CreateTask(labTask, labTask.UseExternal);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
@@ -61,7 +63,7 @@ namespace LabWorkOrganization.API.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteTask([FromRoute] string id, [FromBody] LabTaskAlterDto task)
         {
-            var result = await _labTaskService.DeleteTask(id, task.LabTask.CourseId, task.UseExternal);
+            Result<LabTask> result = await _labTaskService.DeleteTask(id, task.CourseId, task.UseExternal);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);
@@ -72,9 +74,25 @@ namespace LabWorkOrganization.API.Controllers
         // PATCH: api/courses/{courseId}/tasks/update/{id}
         // Updates the details of an existing lab task
         [HttpPatch("update/{id}")]
-        public async Task<IActionResult> UpdateTask([FromRoute] string id, [FromBody] LabTaskAlterDto task)
+        public async Task<IActionResult> UpdateTask([FromRoute] string id, [FromBody] LabTaskCreationalDto task)
         {
-            var result = await _labTaskService.UpdateTask(task.LabTask, task.UseExternal);
+            Result<LabTask> result = await _labTaskService.UpdateTask(id, task, task.UseExternal);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.ErrorMessage);
+            }
+            return Ok(result.Data);
+        }
+
+        // GET: api/courses/{courseId}/tasks/search
+        // Searches for lab tasks in a course by optional title and due date
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchTasks([FromRoute] string courseId,
+            [FromQuery] string? title,
+            [FromQuery] DateTime? dueDate,
+            [FromQuery] bool useExternal)
+        {
+            Result<IEnumerable<LabTask>> result = await _labTaskService.SearchTask(courseId, title, dueDate, useExternal);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);

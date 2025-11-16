@@ -6,17 +6,15 @@ namespace LabWorkOrganization.Infrastructure.Auth
     // Provides secure password hashing and verification using PBKDF2 with SHA256
     public class PasswordHasher : IPasswordHasher
     {
-        private const int SaltSize = 16;      // Size of the random salt in bytes
-        private const int KeySize = 32;       // Size of the derived hash in bytes
-        private const int Iterations = 100_000; // Number of PBKDF2 iterations for security
+        private const int SaltSize = 16;          // Size of the random salt in bytes
+        private const int KeySize = 32;           // Size of the derived hash in bytes
+        private const int Iterations = 100_000;   // Number of PBKDF2 iterations for security
 
         // Generates a hashed password in the format: {salt}.{hash}
         public string HashPassword(string password)
         {
-            byte[] salt = RandomNumberGenerator.GetBytes(SaltSize); // Generate secure random salt
-
-            // Derive hash using PBKDF2 with SHA256
-            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
+            byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
+            using Rfc2898DeriveBytes pbkdf2 = new(password, salt, Iterations, HashAlgorithmName.SHA256);
             byte[] hash = pbkdf2.GetBytes(KeySize);
 
             // Combine salt and hash as a base64 string separated by '.'

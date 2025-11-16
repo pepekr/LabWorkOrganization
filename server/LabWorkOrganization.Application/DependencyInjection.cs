@@ -15,6 +15,7 @@ namespace LabWorkOrganization.Application
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IExternalAuthService, ExternalAuthService>();
             services.AddScoped<IExternalTokenService, ExternalTokenService>();
+            services.AddScoped<IUserTaskService, UserTaskService>();
             return services;
         }
     }

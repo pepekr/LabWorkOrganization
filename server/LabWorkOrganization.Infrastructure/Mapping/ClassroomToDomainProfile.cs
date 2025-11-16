@@ -1,7 +1,8 @@
 using AutoMapper;
 using LabWorkOrganization.Domain.Entities;
 using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos;
-using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos.LabWorkOrganization.Infrastructure.ExternalClients.Google.Dtos;
+using LabWorkOrganization.Infrastructure.Data.ExternalAPIs.dtos.LabWorkOrganization.Infrastructure.ExternalClients.
+    Google.Dtos;
 
 namespace LabWorkOrganization.Infrastructure.Mapping
 {
@@ -11,33 +12,33 @@ namespace LabWorkOrganization.Infrastructure.Mapping
         {
             // CourseClassroomDto → Course
             CreateMap<CourseClassroomDto, Course>()
-     .ForMember(dest => dest.ExternalId, opt => opt.MapFrom(src => src.id)) // Google ID → ExternalId
-     .ForMember(dest => dest.Id, opt => opt.Ignore()) // keep local ID untouched
-     .ForMember(dest => dest.OwnerExternalId, opt => opt.MapFrom(src => src.ownerId))
-     .ForMember(dest => dest.OwnerId, opt => opt.Ignore())
-     .ForMember(dest => dest.Owner, opt => opt.Ignore())
-     .ForMember(dest => dest.LessonDuration, opt => opt.MapFrom(_ => TimeSpan.FromMinutes(90)))
-     .ForMember(dest => dest.EndOfCourse, opt => opt.Ignore())
-     .ForMember(dest => dest.Teachers, opt => opt.Ignore())
-     .ForMember(dest => dest.Tasks, opt => opt.Ignore())
-     .ForMember(dest => dest.SubGroups, opt => opt.Ignore());
+                .ForMember(dest => dest.ExternalId, opt => opt.MapFrom(src => src.id)) // Google ID → ExternalId
+                .ForMember(dest => dest.Id, opt => opt.Ignore()) // keep local ID untouched
+                .ForMember(dest => dest.OwnerExternalId, opt => opt.MapFrom(src => src.ownerId))
+                .ForMember(dest => dest.OwnerId, opt => opt.Ignore())
+                .ForMember(dest => dest.Owner, opt => opt.Ignore())
+                .ForMember(dest => dest.LessonDuration, opt => opt.MapFrom(_ => TimeSpan.FromMinutes(90)))
+                .ForMember(dest => dest.EndOfCourse, opt => opt.Ignore())
+                .ForMember(dest => dest.Teachers, opt => opt.Ignore())
+                .ForMember(dest => dest.Tasks, opt => opt.Ignore())
+                .ForMember(dest => dest.SubGroups, opt => opt.Ignore());
 
             // Local Course → Google DTO
             CreateMap<Course, CourseClassroomDto>()
-        .ForMember(dest => dest.id, opt => opt.Ignore())
-        .ForMember(dest => dest.ownerId, opt => opt.MapFrom(src => src.OwnerExternalId))
-        .ForMember(dest => dest.name, opt => opt.MapFrom(src => src.Name))
-        .ForMember(dest => dest.creationTime, opt => opt.MapFrom(_ => DateTime.UtcNow))
-        .ForMember(dest => dest.updateTime, opt => opt.MapFrom(_ => DateTime.UtcNow))
-        .ForMember(dest => dest.section, opt => opt.Ignore())
-        .ForMember(dest => dest.descriptionHeading, opt => opt.Ignore())
-        .ForMember(dest => dest.description, opt => opt.Ignore())
-        .ForMember(dest => dest.room, opt => opt.Ignore())
-        .ForMember(dest => dest.enrollmentCode, opt => opt.Ignore())
-        .ForMember(dest => dest.courseState, opt => opt.Ignore())
-        .ForMember(dest => dest.alternateLink, opt => opt.Ignore())
-        .ForMember(dest => dest.teacherGroupEmail, opt => opt.Ignore())
-        .ForMember(dest => dest.courseGroupEmail, opt => opt.Ignore());
+                .ForMember(dest => dest.id, opt => opt.Ignore())
+                .ForMember(dest => dest.ownerId, opt => opt.MapFrom(src => src.OwnerExternalId))
+                .ForMember(dest => dest.name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.creationTime, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.updateTime, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.section, opt => opt.Ignore())
+                .ForMember(dest => dest.descriptionHeading, opt => opt.Ignore())
+                .ForMember(dest => dest.description, opt => opt.Ignore())
+                .ForMember(dest => dest.room, opt => opt.Ignore())
+                .ForMember(dest => dest.enrollmentCode, opt => opt.Ignore())
+                .ForMember(dest => dest.courseState, opt => opt.Ignore())
+                .ForMember(dest => dest.alternateLink, opt => opt.Ignore())
+                .ForMember(dest => dest.teacherGroupEmail, opt => opt.Ignore())
+                .ForMember(dest => dest.courseGroupEmail, opt => opt.Ignore());
 
 
             // LabWorkClassroomDto → LabTask
@@ -57,32 +58,35 @@ namespace LabWorkOrganization.Infrastructure.Mapping
                 .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
                 .ForMember(dest => dest.CreationTime, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdateTime, opt => opt.MapFrom(_ => DateTime.UtcNow))
-                .ForMember(dest => dest.DueDate, opt => opt.MapFrom(src => new GoogleDateDto
-                {
-                    Year = src.DueDate.Year,
-                    Month = src.DueDate.Month,
-                    Day = src.DueDate.Day
-                })).ForMember(dest => dest.WorkType, opt => opt.MapFrom(src => "ASSIGNMENT"))
-                .ForMember(dest => dest.DueTime, opt => opt.MapFrom(src => new GoogleTimeOfDayDto
-                {
-                    Hours = src.DueDate.Hour,
-                    Minutes = src.DueDate.Minute,
-                    Seconds = src.DueDate.Second,
-                    Nanos = 0
-                }));
+                .ForMember(dest => dest.DueDate,
+                    opt => opt.MapFrom(src =>
+                        new GoogleDateDto
+                        {
+                            Year = src.DueDate.Year, Month = src.DueDate.Month, Day = src.DueDate.Day
+                        })).ForMember(dest => dest.WorkType, opt => opt.MapFrom(src => "ASSIGNMENT"))
+                .ForMember(dest => dest.DueTime,
+                    opt => opt.MapFrom(src => new GoogleTimeOfDayDto
+                    {
+                        Hours = src.DueDate.Hour,
+                        Minutes = src.DueDate.Minute,
+                        Seconds = src.DueDate.Second,
+                        Nanos = 0
+                    }));
         }
 
         private static DateTime GetDueDate(LabWorkClassroomDto dto)
         {
             if (dto.DueDate is null && dto.DueTime is null)
+            {
                 return dto.CreationTime;
+            }
 
-            var year = dto.DueDate?.Year ?? DateTime.UtcNow.Year;
-            var month = dto.DueDate?.Month ?? DateTime.UtcNow.Month;
-            var day = dto.DueDate?.Day ?? DateTime.UtcNow.Day;
-            var hour = dto.DueTime?.Hours ?? 23;
-            var minute = dto.DueTime?.Minutes ?? 59;
-            var second = dto.DueTime?.Seconds ?? 0;
+            int year = dto.DueDate?.Year ?? DateTime.UtcNow.Year;
+            int month = dto.DueDate?.Month ?? DateTime.UtcNow.Month;
+            int day = dto.DueDate?.Day ?? DateTime.UtcNow.Day;
+            int hour = dto.DueTime?.Hours ?? 23;
+            int minute = dto.DueTime?.Minutes ?? 59;
+            int second = dto.DueTime?.Seconds ?? 0;
 
             return new DateTime(year, month, day, hour, minute, second, DateTimeKind.Utc);
         }

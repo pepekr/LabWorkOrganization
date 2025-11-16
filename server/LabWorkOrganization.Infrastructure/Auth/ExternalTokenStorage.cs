@@ -8,11 +8,11 @@ namespace LabWorkOrganization.Infrastructure.Auth
     // Handles CRUD operations for external tokens stored in the database.
     public class ExternalTokenStorage : IExternalTokenStorage
     {
-        AppDbContext _context; // Consider making this readonly to emphasize immutability
+        private readonly AppDbContext _context; // DbContext injected via DI
 
         public ExternalTokenStorage(AppDbContext context)
         {
-            _context = context; // DbContext injected via DI
+            _context = context;
         }
 
         // Retrieves a token for a specific user and API

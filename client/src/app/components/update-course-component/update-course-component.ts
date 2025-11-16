@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from
 import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Course, CourseAlterDto, CourseService } from "../../services/CourseService/course-service";
+import { ActivatedRoute } from '@angular/router';
+import { environment } from "../../../environments/environment.development"
 
 @Component({
   selector: 'app-update-course-component',
@@ -13,14 +15,14 @@ import { Course, CourseAlterDto, CourseService } from "../../services/CourseServ
 export class UpdateCourseComponent implements OnChanges {
   @Input() course!: Course;
   @Output() close = new EventEmitter<boolean>();
-
+  apiVersion = environment.apiVersion;
   updatedCourse!: Course;
   endOfCourseString: string = '';
   loading: boolean = false;
   successMessage: string = '';
   errorMessage: string = '';
 
-  constructor(private courseService: CourseService) {}
+  constructor(private courseService: CourseService, private route: ActivatedRoute) {}
 
   // Called whenever @Input() changes
   ngOnChanges(changes: SimpleChanges) {
@@ -56,7 +58,8 @@ export class UpdateCourseComponent implements OnChanges {
         lessonDuration: this.updatedCourse.lessonDuration,
         endOfCourse: this.updatedCourse.endOfCourse,
         externalId: this.updatedCourse.externalId,
-        ownerId: this.updatedCourse.ownerId
+        ownerId: this.updatedCourse.ownerId,
+        description: this.apiVersion === 'v2' ? this.updatedCourse.description : ""
       },
       useExternal: !!this.updatedCourse.externalId
     };

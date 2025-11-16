@@ -11,10 +11,34 @@ namespace LabWorkOrganization.Infrastructure
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddInfrastructureDI(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddInfrastructureDI(this IServiceCollection services,
+            IConfiguration configuration)
         {
+            string? dbProvider = configuration.GetValue<string>("Database");
             services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            {
+                switch (dbProvider)
+                {
+                    case "SqlServer":
+                        options.UseSqlServer(configuration.GetConnectionString("SqlServer"));
+                        break;
+
+                    case "Postgres":
+                        options.UseNpgsql(configuration.GetConnectionString("Postgres"));
+                        break;
+
+                    case "Sqlite":
+                        options.UseSqlite(configuration.GetConnectionString("Sqlite"));
+                        break;
+
+                    case "InMemory":
+                        options.UseInMemoryDatabase("InMemoryDb");
+                        break;
+
+                    default:
+                        throw new Exception($"Unsupported database provider: {dbProvider}");
+                }
+            });
 
             services.AddScoped(typeof(ICrudRepository<>), typeof(GenericRepo<>));
             services.AddScoped(typeof(ICourseScopedRepository<>), typeof(CourseScopedRepository<>));
@@ -34,5 +58,4 @@ namespace LabWorkOrganization.Infrastructure
             return services;
         }
     }
-
 }

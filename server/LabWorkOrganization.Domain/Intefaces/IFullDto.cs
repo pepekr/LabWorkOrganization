@@ -2,6 +2,6 @@ namespace LabWorkOrganization.Domain.Intefaces
 {
     public interface IFullDto
     {
-        public string Id { get; set; }
+        string Id { get; set; }
     }
 }

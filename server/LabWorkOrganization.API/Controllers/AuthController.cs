@@ -1,5 +1,7 @@
+using LabWorkOrganization.Application.Dtos;
 using LabWorkOrganization.Application.Dtos.UserDtos;
 using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Domain.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LabWorkOrganization.API.Controllers
@@ -20,12 +22,11 @@ namespace LabWorkOrganization.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto userLoginDto)
         {
-            var result = await _authService.HandleLogin(userLoginDto);
+            Result<JWTTokenDto> result = await _authService.HandleLogin(userLoginDto);
 
             if (result.IsSuccess && result.Data is not null)
             {
-                // Create secure cookies for access and refresh tokens
-                var accessCookieOptions = new CookieOptions
+                CookieOptions accessCookieOptions = new()
                 {
                     HttpOnly = true,
                     Secure = true,
@@ -33,7 +34,7 @@ namespace LabWorkOrganization.API.Controllers
                     Expires = DateTime.UtcNow.AddMinutes(60)
                 };
 
-                var refreshCookieOptions = new CookieOptions
+                CookieOptions refreshCookieOptions = new()
                 {
                     HttpOnly = true,
                     Secure = true,
@@ -45,8 +46,15 @@ namespace LabWorkOrganization.API.Controllers
                 Response.Cookies.Append("access_token", result.Data.AccessToken, accessCookieOptions);
                 Response.Cookies.Append("refresh_token", result.Data.RefreshToken, refreshCookieOptions);
 
-                return Ok(new { message = "Login successful" });
+                return Ok(new AuthResponseDto
+                {
+                    Email = userLoginDto.Email,
+                    AccessToken = result.Data.AccessToken,
+                    RefreshToken = result.Data.RefreshToken
+
+                });
             }
+
             return BadRequest(result.ErrorMessage);
         }
 
@@ -55,10 +63,11 @@ namespace LabWorkOrganization.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegistrationDto)
         {
-            var result = await _authService.HandleRegistration(userRegistrationDto);
+            
+            Result<JWTTokenDto> result = await _authService.HandleRegistration(userRegistrationDto);
             if (result.IsSuccess && result.Data is not null)
             {
-                var accessCookieOptions = new CookieOptions
+                CookieOptions accessCookieOptions = new()
                 {
                     HttpOnly = true,
                     Secure = true,
@@ -66,7 +75,7 @@ namespace LabWorkOrganization.API.Controllers
                     Expires = DateTime.UtcNow.AddMinutes(60)
                 };
 
-                var refreshCookieOptions = new CookieOptions
+                CookieOptions refreshCookieOptions = new()
                 {
                     HttpOnly = true,
                     Secure = true,
@@ -77,8 +86,15 @@ namespace LabWorkOrganization.API.Controllers
                 Response.Cookies.Append("access_token", result.Data.AccessToken, accessCookieOptions);
                 Response.Cookies.Append("refresh_token", result.Data.RefreshToken, refreshCookieOptions);
 
-                return Ok(new { message = "Login successful" });
+                return Ok(new AuthResponseDto
+                {
+                    Email = userRegistrationDto.Email,
+                    AccessToken = result.Data.AccessToken,
+                    RefreshToken = result.Data.RefreshToken
+
+                });
             }
+
             return BadRequest(result.ErrorMessage);
         }
 
@@ -89,14 +105,16 @@ namespace LabWorkOrganization.API.Controllers
         {
             if (User.Identity?.IsAuthenticated == true)
             {
-                var email = User.Claims.FirstOrDefault(c =>
-                    c.Type == "email" || c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
-
+                string? email = User.Claims.FirstOrDefault(c =>
+                        c.Type == "email" ||
+                        c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")
+                    ?.Value;
                 if (!string.IsNullOrEmpty(email))
                 {
                     return Ok(new { isLoggedIn = true, email });
                 }
             }
+
             return Unauthorized(new { isLoggedIn = false, message = "User is not logged in" });
         }
 

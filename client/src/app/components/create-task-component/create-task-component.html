@@ -1,0 +1,71 @@
+<div class="create-course-form">
+  <h2>Create New Task</h2>
+  <button type="button" class="close-btn" (click)="cancel()">×</button>
+
+  <form #taskForm="ngForm" (ngSubmit)="submitForm(taskForm)">
+    <div class="form-group">
+      <label for="title">Task Title</label>
+      <input type="text"
+             id="title"
+             name="title"
+             required
+             [(ngModel)]="task.title"
+             [ngModelOptions]="{standalone: true}" />
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description"
+                name="description"
+                rows="4"
+                [(ngModel)]="task.description"
+                [ngModelOptions]="{standalone: true}"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="timeLimit">Time Limit (HH:MM:SS)</label>
+      <input type="text"
+             id="timeLimit"
+             name="timeLimit"
+             required
+             pattern="^\d{2}:\d{2}:\d{2}$"
+             [(ngModel)]="task.timeLimitPerStudent"
+             [ngModelOptions]="{standalone: true}" />
+    </div>
+
+    <div class="form-group">
+      <label for="dueDate">Due Date</label>
+      <input type="date"
+             id="dueDate"
+             name="dueDate"
+             required
+             [(ngModel)]="dueDateString"
+             [ngModelOptions]="{standalone: true}" />
+    </div>
+
+    <div class="form-group">
+      <label>
+        <input type="checkbox"
+               name="isSentRequired"
+               [(ngModel)]="task.isSentRequired"
+               [ngModelOptions]="{standalone: true}" />
+        Is Submission Required
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label>
+        <input type="checkbox"
+               name="useExternal"
+               [(ngModel)]="task.useExternal"
+               [ngModelOptions]="{standalone: true}" />
+        Use External (Google)
+      </label>
+    </div>
+
+    <button type="submit" [disabled]="loading">Create Task</button>
+
+    <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  </form>
+</div>

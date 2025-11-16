@@ -3,6 +3,8 @@ import { Course, CourseService } from "../../services/CourseService/course-servi
 import { CreateCourseComponent } from "../../components/create-course-component/create-course-component";
 import { UpdateCourseComponent } from "../../components/update-course-component/update-course-component";
 import { CommonModule, DatePipe } from '@angular/common';
+import { Router, ActivatedRoute } from '@angular/router';
+import { environment } from "../../../environments/environment.development";
 
 @Component({
   selector: 'app-home',
@@ -12,32 +14,54 @@ import { CommonModule, DatePipe } from '@angular/common';
   imports: [CreateCourseComponent, UpdateCourseComponent, DatePipe, CommonModule]
 })
 export class Home implements OnInit {
-  courses: Course[] = [];
-  loading: boolean = false;
-  error: string = '';
+  studentCourses: Course[] = [];
+  ownedCourses: Course[] = [];
+  loadingStudent: boolean = false;
+  errorStudent: string = '';
+  loadingOwned: boolean = false;
+  errorOwned: string = '';
 
   showCreateCourse: boolean = false;
   showUpdateCourse: boolean = false;
   selectedCourse: Course | null = null;
 
-  constructor(private courseService: CourseService) {}
+  constructor(private courseService: CourseService, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    this.fetchCourses();
+    this.fetchStudentCourses();
+    this.fetchOwnedCourses();
   }
 
-  fetchCourses(): void {
-    this.loading = true;
-    this.error = '';
-    this.courseService.getAllCourses().subscribe({
+  fetchStudentCourses(): void {
+    this.loadingStudent = true;
+    this.errorStudent = '';
+    // This calls GET /api/users/student/courses
+    this.courseService.getStudentCourses().subscribe({
       next: (res) => {
-        this.courses = res;
-        this.loading = false;
+        this.studentCourses = res;
+        this.loadingStudent = false;
       },
       error: (err) => {
-        this.error = 'Failed to load courses';
+        this.errorStudent = 'Failed to load your enrolled courses.';
         console.error(err);
-        this.loading = false;
+        this.loadingStudent = false;
+      }
+    });
+  }
+
+  fetchOwnedCourses(): void {
+    this.loadingOwned = true;
+    this.errorOwned = '';
+    // This calls GET /api/courses/getAllByUserId
+    this.courseService.getAllCourses().subscribe({
+      next: (res) => {
+        this.ownedCourses = res;
+        this.loadingOwned = false;
+      },
+      error: (err) => {
+        this.errorOwned = 'Failed to load your owned courses.';
+        console.error(err);
+        this.loadingOwned = false;
       }
     });
   }
@@ -47,7 +71,8 @@ export class Home implements OnInit {
 
     this.courseService.deleteCourse(courseId, useExternal).subscribe({
       next: () => {
-        this.courses = this.courses.filter(c => c.id !== courseId);
+        // Remove from the owned list only
+        this.ownedCourses = this.ownedCourses.filter(c => c.id !== courseId);
       },
       error: (err) => {
         console.error('Failed to delete course', err);
@@ -62,22 +87,27 @@ export class Home implements OnInit {
 
   closeCreateCourse(courseCreated: boolean) {
     this.showCreateCourse = false;
-    if (courseCreated) this.fetchCourses();
+    if (courseCreated) {
+      this.fetchOwnedCourses(); // Refresh owned list
+    }
   }
 
-openUpdateCourse(course: Course) {
-  // Ensure the course object has the ID
-  if (!course.id) {
-    console.error('Cannot update course without ID', course);
-    return;
+  openUpdateCourse(course: Course) {
+    if (!course.id) return;
+    this.selectedCourse = course;
+    this.showUpdateCourse = true;
   }
-  console.log(course)
-  this.selectedCourse = course;
-  this.showUpdateCourse = true;
-}
+
   closeUpdateCourse(updated: boolean) {
     this.showUpdateCourse = false;
     this.selectedCourse = null;
-    if (updated) this.fetchCourses();
+    if (updated) {
+      this.fetchOwnedCourses(); // Refresh owned list
+    }
+  }
+
+  navigateToCourse(courseId: string) {
+    if (!courseId) return;
+    this.router.navigate([`${environment.apiVersion}/course`, courseId]);
   }
 }

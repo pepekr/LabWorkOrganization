@@ -8,7 +8,6 @@ namespace LabWorkOrganization.Application.Dtos.CourseDtos
 }
 
 
-
 public class CourseUpdateDto
 {
     public string Id { get; set; } = null!;

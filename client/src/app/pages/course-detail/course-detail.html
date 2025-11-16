@@ -1,0 +1,115 @@
+<div class="course-list">
+  <a routerLink="/">&larr; Back to all courses</a>
+
+  <h2 *ngIf="course">{{ course.name }} - Details</h2>
+  <p *ngIf="apiVersion === 'v2'">Description - {{ course?.description }}</p>
+  <h2 *ngIf="!course && !error">Loading Course Details...</h2>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div *ngIf="showCreateTask" class="modal">
+    <div class="modal-content">
+      <app-create-task-component
+        [courseId]="courseId"
+        (close)="closeCreateTask($event)">
+      </app-create-task-component>
+    </div>
+  </div>
+
+  <div *ngIf="showUpdateTask && selectedTask" class="modal">
+    <div class="modal-content">
+      <app-update-task-component
+        [task]="selectedTask"
+        (close)="closeUpdateTask($event)">
+      </app-update-task-component>
+    </div>
+  </div>
+
+  <div *ngIf="showCreateSubgroup" class="modal">
+    <div class="modal-content">
+      <app-create-subgroup-component
+        [courseId]="courseId"
+        (close)="closeCreateSubgroup($event)">
+      </app-create-subgroup-component>
+    </div>
+  </div>
+
+  <div *ngIf="showUpdateSubgroup && selectedSubgroup" class="modal">
+    <div class="modal-content">
+      <app-update-subgroup-component
+        [subgroup]="selectedSubgroup"
+        [courseId]="courseId"
+        (close)="closeUpdateSubgroup($event)">
+      </app-update-subgroup-component>
+    </div>
+  </div>
+
+  <div *ngIf="showQueue && selectedSubgroup && course" class="modal">
+    <div class="modal-content modal-content-queue">
+      <app-queue
+        [subgroup]="selectedSubgroup"
+        [course]="course"
+        [tasks]="tasks"
+        (close)="closeQueue()">
+      </app-queue>
+    </div>
+  </div>
+
+
+  <hr>
+  <h2>Subgroups</h2>
+  <button class="create-btn" (click)="openCreateSubgroup()">+ Create New Subgroup</button>
+
+  <div *ngIf="loadingSubgroups">Loading subgroups...</div>
+
+  <ul *ngIf="!loadingSubgroups && subgroups.length > 0">
+    <li *ngFor="let subgroup of subgroups">
+      <h3>{{ subgroup.name }}</h3>
+      <p>Active Days: {{ formatAllowedDays(subgroup.allowedDays) }}</p>
+
+      <button class="queue-btn" (click)="openQueue(subgroup)">View Queue</button>
+      <button class="update-btn" (click)="openUpdateSubgroup(subgroup)">Manage Students</button>
+      <button class="delete-btn" (click)="deleteSubgroup(subgroup)">Delete</button>
+    </li>
+  </ul>
+
+  <div *ngIf="!loadingSubgroups && subgroups.length === 0">
+    No subgroups available for this course.
+  </div>
+
+
+  <hr>
+  <h2>Tasks</h2>
+  <ul class = "task-buttons">
+    <button class="create-btn" (click)="openCreateTask()">+ Create New Task</button>
+    <button class="create-btn" (click)="openSearchTask()">? Search Task</button>
+  </ul>
+
+  <div *ngIf="loadingTasks">Loading tasks...</div>
+
+  <ul *ngIf="!loadingTasks && tasks.length > 0">
+    <li *ngFor="let task of tasks">
+      <h3 (click)="navigateToTask(task.id)" style="cursor: pointer; color: #1d7ade;">
+        {{ task.title }}
+      </h3>
+      <p>Due Date: {{ task.dueDate | date:'mediumDate' }}</p>
+      <p>Time Limit: {{ task.timeLimitPerStudent }}</p>
+
+      <button class="queue-btn" (click)="navigateToTask(task.id)">View Task</button>
+      <button class="update-btn" (click)="openUpdateTask(task)">Settings</button>
+      <button class="delete-btn" (click)="deleteTask(task)">Delete</button>
+    </li>
+  </ul>
+
+  <div *ngIf="!loadingTasks && tasks.length === 0">
+    No tasks available for this course.
+  </div>
+
+  <div *ngIf="showSearchTask" class="modal">
+    <div class="modal-content">
+      <app-search-task-component
+        (close)="closeSearchTask()"
+        (search)="onSearch($event)">
+      </app-search-task-component>
+    </div>
+  </div>
+</div>
