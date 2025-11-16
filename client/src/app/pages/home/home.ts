@@ -3,7 +3,8 @@ import { Course, CourseService } from "../../services/CourseService/course-servi
 import { CreateCourseComponent } from "../../components/create-course-component/create-course-component";
 import { UpdateCourseComponent } from "../../components/update-course-component/update-course-component";
 import { CommonModule, DatePipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { environment } from "../../../environments/environment.development";
 
 @Component({
   selector: 'app-home',
@@ -24,7 +25,7 @@ export class Home implements OnInit {
   showUpdateCourse: boolean = false;
   selectedCourse: Course | null = null;
 
-  constructor(private courseService: CourseService, private router: Router) {}
+  constructor(private courseService: CourseService, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.fetchStudentCourses();
@@ -107,6 +108,6 @@ export class Home implements OnInit {
 
   navigateToCourse(courseId: string) {
     if (!courseId) return;
-    this.router.navigate(['/course', courseId]);
+    this.router.navigate([`${environment.apiVersion}/course`, courseId]);
   }
 }

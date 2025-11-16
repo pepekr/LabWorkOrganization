@@ -2,6 +2,7 @@
   <a routerLink="/">&larr; Back to all courses</a>
 
   <h2 *ngIf="course">{{ course.name }} - Details</h2>
+  <p *ngIf="apiVersion === 'v2'">Description - {{ course?.description }}</p>
   <h2 *ngIf="!course && !error">Loading Course Details...</h2>
   <div *ngIf="error" class="error">{{ error }}</div>
 

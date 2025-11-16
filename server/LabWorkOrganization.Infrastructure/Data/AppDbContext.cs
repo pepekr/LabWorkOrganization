@@ -5,7 +5,7 @@ namespace LabWorkOrganization.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
-        /* migrations commands so i dont need to look 4 them in chatgpt
+        /* migrations commands so i dont need to look 4 them elsewhere
          dotnet ef migrations remove --project .\server\LabWorkOrganization.Infrastructure --startup-project .\server\LabWorkOrganization.API
          dotnet ef migrations add migration00101010 --project .\server\LabWorkOrganization.Infrastructure --startup-project .\server\LabWorkOrganization.API
          dotnet ef database update --project .\server\LabWorkOrganization.Infrastructure --startup-project .\server\LabWorkOrganization.API 

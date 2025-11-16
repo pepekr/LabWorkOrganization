@@ -7,58 +7,63 @@ using System.Text.Json;
 
 namespace LabWorkOrganization.Infrastructure.Auth
 {
+    // Service for validating Google OAuth tokens (JWT and opaque tokens)
     public class GoogleTokenValidation : IExternalTokenValidation
     {
-        private readonly JWKSClient _jwksClient;
+        private readonly JWKSClient _jwksClient; // Client for fetching Google's public keys
 
         public GoogleTokenValidation(JWKSClient jwksClient)
         {
-            _jwksClient = jwksClient;
+            _jwksClient = jwksClient; // Injected via DI
         }
 
+        // Validates a JWT token issued by Google
         public async Task<ClaimsPrincipal?> ValidateJwtTokenAsync(string token)
         {
+            // Fetch public keys from Google for signature validation
             IEnumerable<SecurityKey> keys = await _jwksClient.GetGoogleKeysAsync();
 
-
-            TokenValidationParameters validationParameters = new()
+            var validationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
+                ValidateIssuer = true, // Ensure token comes from Google
                 ValidIssuers = new[] { "https://accounts.google.com", "accounts.google.com" },
-                ValidateAudience = true,
-                ValidAudience =
-                    Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID") ??
-                    throw new Exception("Google id wasnt provided"),
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKeys = keys,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.FromMinutes(5)
+
+                ValidateAudience = true, // Ensure token is meant for our application
+                ValidAudience = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+                                ?? throw new Exception("Google CLIENT ID not provided"),
+
+                ValidateIssuerSigningKey = true, // Verify token signature
+                IssuerSigningKeys = keys, // Keys used to verify the signature
+
+                ValidateLifetime = true, // Ensure token is not expired
+                ClockSkew = TimeSpan.FromMinutes(5) // Allow minor clock differences
             };
 
             JwtSecurityTokenHandler handler = new();
+            // Validate token and return claims principal
+            ClaimsPrincipal principal = handler.ValidateToken(token, validationParameters, out _);
 
-            ClaimsPrincipal? principal = handler.ValidateToken(token, validationParameters, out _);
             return principal;
         }
 
+        // Validates an opaque token (non-JWT) by calling Google's tokeninfo endpoint
         public async Task<ClaimsPrincipal?> ValidateOpaqueTokenAsync(string token, string tokenType)
         {
-            HttpClient httpClient = new();
-            HttpResponseMessage result =
-                await httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?{tokenType}={token}");
+            using HttpClient httpClient = new(); // Consider reusing HttpClient for efficiency
+            HttpResponseMessage result = await httpClient.GetAsync(
+                $"https://www.googleapis.com/oauth2/v3/tokeninfo?{tokenType}={token}");
+
             if (!result.IsSuccessStatusCode)
-            {
-                throw new SecurityTokenException("Invalid token");
-            }
+                throw new SecurityTokenException("Invalid token"); // Token is invalid or expired
 
             string json = await result.Content.ReadAsStringAsync();
             Dictionary<string, string>? tokenInfo = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-            if (tokenInfo is null)
-            {
-                throw new SecurityTokenException("Invalid token");
-            }
 
-            List<Claim> claims = new()
+            if (tokenInfo is null)
+                throw new SecurityTokenException("Invalid token"); // Deserialization failed
+
+            // Create claims based on token info returned from Google
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, tokenInfo.GetValueOrDefault("sub", "")),
                 new Claim(ClaimTypes.Email, tokenInfo.GetValueOrDefault("email", "")),
@@ -66,8 +71,9 @@ namespace LabWorkOrganization.Infrastructure.Auth
                 new Claim("scope", tokenInfo.GetValueOrDefault("scope", ""))
             };
 
-            ClaimsIdentity identity = new(claims, "GoogleToken");
-            ClaimsPrincipal principal = new(identity);
+            var identity = new ClaimsIdentity(claims, "GoogleToken"); // Identity using claims
+            var principal = new ClaimsPrincipal(identity); // Principal representing the user
+
             return principal;
         }
     }

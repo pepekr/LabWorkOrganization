@@ -1,7 +1,9 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { CourseCreationalDto, CourseService } from "../../services/CourseService/course-service";
+import { CourseCreationalDto, CourseCreationalDtoV2, CourseService } from "../../services/CourseService/course-service";
+import { ActivatedRoute } from "@angular/router";
+import { environment } from "../../../environments/environment.development";
 
 @Component({
   selector: 'app-create-course-component',
@@ -13,12 +15,15 @@ import { CourseCreationalDto, CourseService } from "../../services/CourseService
 export class CreateCourseComponent {
   @Output() close = new EventEmitter<boolean>(); // emits true when closing
 
-  course: CourseCreationalDto = {
-    name: '',
-    lessonDuration: '01:00:00',
-    endOfCourse: new Date(),
-    useExternal: false
-  };
+  apiVersion = environment.apiVersion;
+  course: CourseCreationalDtoV2 =
+    {
+      name: '',
+      lessonDuration: '01:00:00',
+      endOfCourse: new Date(),
+      useExternal: false,
+      description: ''
+    };
 
   endOfCourseString: string = this.dateToInputString(this.course.endOfCourse);
 
@@ -26,7 +31,7 @@ export class CreateCourseComponent {
   successMessage: string = '';
   errorMessage: string = '';
 
-  constructor(private courseService: CourseService) {}
+  constructor(private courseService: CourseService, private route: ActivatedRoute) {}
 
   dateToInputString(date: Date): string {
     const d = new Date(date);
@@ -63,7 +68,7 @@ export class CreateCourseComponent {
 
         // Notify parent that modal should close
         setTimeout(()=>{this.close.emit(true);}, 1000)
-        
+
       },
       error: (err) => {
         console.error(err);
