@@ -13,12 +13,12 @@ export const routes: Routes = [
     // canActivate: [AuthGuard]
   },
   {
-    path: 'course/:id', // Keep this route
+    path: ':apiVersion/course/:id', // Keep this route
     component: CourseDetail,
     // canActivate: [AuthGuard]
   },
   {
-    path: 'course/:courseId/task/:id',
+    path: ':apiVersion/course/:courseId/task/:id',
     component: TaskDetail,
     // canActivate: [AuthGuard]
   },
