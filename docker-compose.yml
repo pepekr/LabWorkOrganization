@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  # 1. База даних
+  db:
+    image: postgres:15
+    container_name: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "LabWorkOrganization"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "mysecretpassword"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # 2. C# Backend API
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: server/LabWorkOrganization.API/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=LabWorkOrganization;Username=postgres;Password=mysecretpassword
+      - ASPNETCORE_URLS=http://+:7220
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=${JWT_ISSUER}
+      - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - REDIRECT_URI=${REDIRECT_URI}
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  # 3. Angular SSR Client
+  client:
+    container_name: client
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    # Цей Dockerfile запускає SSR-сервер на порту 4000
+
+  # 4. Nginx Proxy (Вхідна точка)
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80" # Мапимо порт 80 VM на порт 80 Nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - client
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

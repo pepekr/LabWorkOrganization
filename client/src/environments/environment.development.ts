@@ -1,4 +1,5 @@
 export const environment = {
     production: false,
-    backendUrl: "https://localhost:7220" 
+    backendUrl: ""  //changed due to ERR_CONNECTION_REFUSED
+    //backendUrl: "https://localhost:7220"
 };
