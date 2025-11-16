@@ -12,14 +12,16 @@ using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using LabWorkOrganization.API.Configurations;
 
+// Load environment variables from the .env file
 Env.Load();
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+// Initialize the WebApplication builder
+var builder = WebApplication.CreateBuilder(args);
 
-
+// Register essential services for dependency injection
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
-builder.Services.AddApiVersioning(options => //api versioning
+builder.Services.AddApiVersioning(options =>
 {
     options.ReportApiVersions = true;
     options.AssumeDefaultVersionWhenUnspecified = true;
@@ -32,14 +34,18 @@ builder.Services.AddApiVersioning(options => //api versioning
 });
 
 builder.Services.AddEndpointsApiExplorer();
+
+// Configure HttpClient for external API (Google OAuth)
 builder.Services.AddHttpClient<JWKSClient>(client =>
 {
     client.BaseAddress = new Uri("https://www.googleapis.com/oauth2/v3/");
 });
 
+// Register application-level dependency injection
 builder.Services.AddAppDI(builder.Configuration);
 builder.Services.AddAuthorization();
 
+// Configure Swagger with JWT authentication support
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer",
@@ -54,33 +60,28 @@ builder.Services.AddSwaggerGen(c =>
         });
 });
 builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
+
+// Configure JWT Authentication with Bearer tokens
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
         o.RequireHttpsMetadata = true;
         o.SaveToken = false;
 
-
+        // Configure JWT event handlers
         o.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
-                if (string.IsNullOrEmpty(context.Token))
+                string? token = context.Token ?? context.Request.Cookies["access_token"];
+                if (!string.IsNullOrEmpty(token))
                 {
-                    string? cookieToken = context.Request.Cookies["access_token"];
-                    if (!string.IsNullOrEmpty(cookieToken))
-                    {
-                        context.Token = cookieToken;
-                        Console.WriteLine("[AUTH TRACE] 🍪 Token pulled from cookie.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("[AUTH TRACE] ⚠️ No token found in header or cookie.");
-                    }
+                    context.Token = token;
+                    Console.WriteLine("[AUTH TRACE] 🍪 Token pulled from cookie or header.");
                 }
                 else
                 {
-                    Console.WriteLine("[AUTH TRACE] 🧠 Token found in Authorization header.");
+                    Console.WriteLine("[AUTH TRACE] ⚠️ No token found in header or cookie.");
                 }
 
                 Console.WriteLine($"[AUTH TRACE] Raw Token: {context.Token ?? "NULL"}");
@@ -100,6 +101,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
 
+        // Token validation parameters
         o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -115,15 +117,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Build the app
+var app = builder.Build();
 
-WebApplication app = builder.Build();
+var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
-var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>(); // for 2 apis in swagger
-
+// Enable Swagger in development mode
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(options => // so both apis shown
+    app.UseSwaggerUI(options =>
     {
         foreach (var desc in provider.ApiVersionDescriptions)
         {
@@ -132,22 +135,25 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Enforce HTTPS redirection
 app.UseHttpsRedirection();
+
+// Configure CORS policy to allow Angular frontend requests
 app.UseCors(c => c
     .WithOrigins("http://localhost:4200", "https://localhost:4200", "https://localhost:7220")
     .AllowCredentials()
     .AllowAnyHeader()
     .AllowAnyMethod()
 );
+
+// Middleware to refresh JWT tokens if access token is missing
 app.Use(async (context, next) =>
 {
-
     string? accessToken = context.Request.Cookies["access_token"]
                           ?? context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
 
     string? refreshToken = context.Request.Cookies["refresh_token"]
                            ?? context.Request.Headers["X-Refresh-Token"].FirstOrDefault();
-
 
     if (string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
     {
@@ -161,7 +167,7 @@ app.Use(async (context, next) =>
             string newAccess = refreshResult.Data.AccessToken;
             string newRefresh = refreshResult.Data.RefreshToken;
 
-            // 3️⃣ Set new cookies
+            // Set new cookies
             context.Response.Cookies.Append("access_token", newAccess, new CookieOptions
             {
                 HttpOnly = true,
@@ -178,10 +184,9 @@ app.Use(async (context, next) =>
                 Expires = DateTime.UtcNow.AddDays(10)
             });
 
-            Console.WriteLine("[AUTH REFRESH] ✅ Tokens refreshed successfully.");
-
-            // 4️⃣ Inject new access token into the request headers for downstream middleware
+            // Inject new access token into request headers
             context.Request.Headers["Authorization"] = $"Bearer {newAccess}";
+            Console.WriteLine("[AUTH REFRESH] ✅ Tokens refreshed successfully.");
         }
         else
         {
@@ -189,14 +194,15 @@ app.Use(async (context, next) =>
         }
     }
 
-    // 5️⃣ Continue request pipeline
     await next();
 });
 
+// Enable authentication & authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+// Map all controllers
 app.MapControllers();
 
+// Run the application
 app.Run();

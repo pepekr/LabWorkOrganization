@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LabWorkOrganization.API.Controllers
 {
     [Route("api/courses/{courseId}/subgroups")]
+    [ApiController]
     public class SubGroupController : ControllerBase
     {
         private readonly ISubgroupService _subGroupService;
@@ -17,6 +18,8 @@ namespace LabWorkOrganization.API.Controllers
             _subGroupService = subGroupService;
         }
 
+        // POST: api/courses/{courseId}/subgroups/create
+        // Creates a new subgroup under a specific course
         [HttpPost("create")]
         public async Task<IActionResult> CreateSubgroup([FromBody] SubGroupCreationalDto subgroup)
         {
@@ -29,6 +32,8 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
+        // GET: api/courses/{courseId}/subgroups/getAll
+        // Retrieves all subgroups associated with a given course
         [HttpGet("getAll")]
         public async Task<IActionResult> GetAllSubgroupsByCourseId([FromRoute] string courseId)
         {
@@ -41,6 +46,8 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
+        // POST: api/courses/{courseId}/subgroups/{subGroupId}/queue/add
+        // Adds a new student/place to a subgroup queue
         [HttpPost("{subGroupId}/queue/add")]
         public async Task<IActionResult> AddToQueue([FromRoute] string subGroupId,
             [FromBody] QueuePlaceCreationalDto queuePlace)
@@ -54,6 +61,8 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
+        // POST: api/courses/{courseId}/subgroups/{subGroupId}/queue/remove
+        // Removes a student/place from a subgroup queue
         [HttpPost("{subGroupId}/queue/remove")]
         public async Task<IActionResult> RemoveFromQueue([FromRoute] string subGroupId, [FromBody] string queuePlaceId)
         {
@@ -66,15 +75,13 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
-        /**
-         * Оновлює список студентів у підгрупі.
-         * Очікує DTO, що містить ID підгрупи та новий список email-адрес.
-         */
+        // PUT: api/courses/{courseId}/subgroups/{subgroupId}/students
+        // Updates the list of students in a subgroup
         [HttpPut("{subgroupId}/students")]
         public async Task<IActionResult> UpdateStudents([FromRoute] string subgroupId,
             [FromBody] SubGroupStudentsDto subGroupStudentsDto)
         {
-            // Перевірка, що ID в DTO та ID в маршруті збігаються
+            // Ensure route ID matches DTO ID
             if (subgroupId != subGroupStudentsDto.SubGroupId)
             {
                 return BadRequest("Route ID and DTO ID do not match.");
@@ -89,13 +96,12 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
-        /**
-         * Видаляє підгрупу за її ID.
-         */
+        // DELETE: api/courses/{courseId}/subgroups/{subgroupId}
+        // Deletes a subgroup by its ID
         [HttpDelete("{subgroupId}")]
         public async Task<IActionResult> DeleteSubgroup([FromRoute] string subgroupId)
         {
-            Result<SubGroup> result = await _subGroupService.DeleteSubgroup(subgroupId); // [cite: 1291, 1443]
+            Result<SubGroup> result = await _subGroupService.DeleteSubgroup(subgroupId);
             if (!result.IsSuccess)
             {
                 return BadRequest(result.ErrorMessage);

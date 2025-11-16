@@ -18,12 +18,15 @@ namespace LabWorkOrganization.API.Controllers
             _extAuthService = extAuthService;
         }
 
+        // Redirects user to the external authentication provider (e.g., Google)
+
         [HttpGet("external-login")]
         public IActionResult ExternalLogin([FromQuery] string returnUrl)
         {
             return Redirect(_extAuthService.RedirectUri());
         }
 
+        // Handles the callback after external authentication
         [HttpGet("external-callback")]
         public async Task<IActionResult> ExternalCallback([FromQuery] string code)
         {
@@ -32,11 +35,11 @@ namespace LabWorkOrganization.API.Controllers
             {
                 return BadRequest(result.ErrorMessage);
             }
-
-            return Redirect("http://localhost:4200?linked=true");
-            ;
+            // Redirects back to frontend after successful login
+            return Redirect($"http://localhost:4200?linked=true");
         }
 
+        // Logs the user out from the external authentication provider
         [HttpPost("external-logout")]
         public async Task<IActionResult> ExternalLogout()
         {
@@ -49,6 +52,7 @@ namespace LabWorkOrganization.API.Controllers
             return Ok(result.Data);
         }
 
+        // Checks whether the user is currently logged in with external authentication
         [Authorize]
         [HttpGet("isLoggedIn")]
         public async Task<IActionResult> IsLoggedIn()
