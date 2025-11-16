@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using LabWorkOrganization.API.Configurations;
 
 Env.Load();
 
@@ -16,6 +19,18 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
+builder.Services.AddApiVersioning(options => //api versioning
+{
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpClient<JWKSClient>(client =>
 {
@@ -38,6 +53,7 @@ builder.Services.AddSwaggerGen(c =>
             Description = "Enter JWT token manually here (for Swagger testing only)"
         });
 });
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
@@ -102,10 +118,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 WebApplication app = builder.Build();
 
+var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>(); // for 2 apis in swagger
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options => // so both apis shown
+    {
+        foreach (var desc in provider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{desc.GroupName}/swagger.json", desc.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
 app.UseHttpsRedirection();

@@ -37,6 +37,7 @@ export class CourseDetail implements OnInit {
   loadingSubgroups: boolean = false;
   error: string = '';
   courseId: string = '';
+  apiVersion: string = '';
 
   // Модальні вікна для завдань
   showCreateTask: boolean = false;
@@ -61,6 +62,7 @@ export class CourseDetail implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.apiVersion = this.route.snapshot.params['apiVersion'];
     const idFromRoute = this.route.snapshot.paramMap.get('id');
     if (!idFromRoute) {
       this.error = 'Course ID not found in URL';

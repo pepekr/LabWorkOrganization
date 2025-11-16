@@ -14,6 +14,10 @@
       <label for="lessonDuration">Lesson Duration (HH:MM:SS)</label>
       <input type="text" id="lessonDuration" name="lessonDuration" required pattern="^\\d{2}:\\d{2}:\\d{2}$" [(ngModel)]="course.lessonDuration" [ngModelOptions]="{standalone: true}" />
     </div>
+    <div class="form-group" *ngIf="apiVersion === 'v2'">
+      <label for="description">Description</label>
+      <input type="text" id="description" name="description" [(ngModel)]="course.description" [ngModelOptions]="{standalone: true}" />
+    </div>
 
     <div class="form-group">
       <label for="endOfCourse">End of Course</label>

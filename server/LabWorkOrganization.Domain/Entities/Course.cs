@@ -11,6 +11,8 @@ namespace LabWorkOrganization.Domain.Entities
         public string? OwnerExternalId { get; set; } = null!;
         public User Owner { get; set; } = null!;
         public string Name { get; set; } = null!;
+        
+        public string? Description { get; set; }  = null!;
         public TimeSpan LessonDuration { get; set; }
         public ICollection<User> Teachers { get; set; } = new List<User>();
         public ICollection<LabTask> Tasks { get; set; } = new List<LabTask>();
