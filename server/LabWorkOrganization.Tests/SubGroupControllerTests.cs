@@ -1,47 +1,54 @@
-using Xunit;
-using Moq;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc;
 using LabWorkOrganization.API.Controllers;
-using LabWorkOrganization.Application.Interfaces;
 using LabWorkOrganization.Application.Dtos.SubGroupDtos;
-using LabWorkOrganization.Application.Common;
-
+using LabWorkOrganization.Application.Interfaces;
+using LabWorkOrganization.Domain.Entities;
+using LabWorkOrganization.Domain.Utilities;
+using Microsoft.AspNetCore.Mvc;
+using Moq;
+using Xunit;
+namespace LabWorkOrganization.Tests.Controllers;
 public class SubGroupControllerTests
 {
-	// Ok result expected when subgroup creation succeeds
-	[Fact]
-	public async Task CreateSubgroup_ShouldReturnOk_WhenSuccess()
-	{
-		// Arrange: mock returns success
-		var mock = new Mock<ISubgroupService>();
-		mock.Setup(s => s.CreateSubgroup(It.IsAny<SubGroupCreationalDto>()))
-			.ReturnsAsync(Result.Success(new object()));
+    [Fact]
+    public async Task CreateSubgroup_ShouldReturnOk_WhenSuccess()
+    {
+        // Arrange
+        var mockService = new Mock<ISubgroupService>();
+        var newSubgroup = new SubGroup { Id = "1", Name = "Test Subgroup" };
 
-		var controller = new SubGroupController(mock.Object);
+        mockService.Setup(s => s.CreateSubgroup(It.IsAny<SubGroupCreationalDto>()))
+            .ReturnsAsync(Result<SubGroup>.Success(newSubgroup));
 
-		// Act
-		var result = await controller.CreateSubgroup(new SubGroupCreationalDto());
+        var controller = new SubGroupController(mockService.Object);
 
-		// Assert
-		result.Should().BeOfType<OkObjectResult>();
-	}
+        // Act
+        var result = await controller.CreateSubgroup(new SubGroupCreationalDto());
 
-	// BadRequest expected when creation fails
-	[Fact]
-	public async Task CreateSubgroup_ShouldReturnBadRequest_WhenFailed()
-	{
-		// Arrange: mock returns failure
-		var mock = new Mock<ISubgroupService>();
-		mock.Setup(s => s.CreateSubgroup(It.IsAny<SubGroupCreationalDto>()))
-			.ReturnsAsync(Result.Failure<object>("error"));
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult?.Value.Should().Be(newSubgroup);
+    }
 
-		var controller = new SubGroupController(mock.Object);
+    [Fact]
+    public async Task CreateSubgroup_ShouldReturnBadRequest_WhenFailed()
+    {
+        // Arrange
+        var mockService = new Mock<ISubgroupService>();
+        string errorMessage = "Subgroup creation failed";
 
-		// Act
-		var result = await controller.CreateSubgroup(new SubGroupCreationalDto());
+        mockService.Setup(s => s.CreateSubgroup(It.IsAny<SubGroupCreationalDto>()))
+            .ReturnsAsync(Result<SubGroup>.Failure(errorMessage));
 
-		// Assert
-		result.Should().BeOfType<BadRequestObjectResult>();
-	}
+        var controller = new SubGroupController(mockService.Object);
+
+        // Act
+        var result = await controller.CreateSubgroup(new SubGroupCreationalDto());
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequest = result as BadRequestObjectResult;
+        badRequest?.Value.Should().Be(errorMessage);
+    }
 }
