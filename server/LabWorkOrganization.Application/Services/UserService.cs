@@ -18,6 +18,7 @@ namespace LabWorkOrganization.Application.Services
         private readonly ICourseScopedRepository<SubGroup> _subGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICrudRepository<User> _userRepository;
+        private readonly ICrudRepository<Course> _courseRepository;
 
         public UserService(
             ICrudRepository<User> userRepo,
@@ -26,7 +27,7 @@ namespace LabWorkOrganization.Application.Services
             IUnitOfWork unitOfWork,
             ICourseScopedRepository<SubGroup> subGroupRepository,
             IExternalTokenService externalTokenService,
-            IExternalCrudRepoFactory externalCrudFactory)
+            IExternalCrudRepoFactory externalCrudFactory, ICrudRepository<Course> courseRepository)
         {
             _userRepository = userRepo;
             _passwordHasher = passwordHasher;
@@ -35,6 +36,7 @@ namespace LabWorkOrganization.Application.Services
             _subGroupRepository = subGroupRepository;
             _externalTokenService = externalTokenService;
             _externalCrudFactory = externalCrudFactory;
+            _courseRepository = courseRepository;
         }
 
         public string GetCurrentUserId()
@@ -275,6 +277,36 @@ namespace LabWorkOrganization.Application.Services
                 return Result<IEnumerable<User>>.Failure(
                     $"An error occurred while retrieving users: {ex.Message}"
                 );
+            }
+        }
+        public async Task<Result<IEnumerable<Course>>> GetStudentCoursesAsync()
+        {
+            try
+            {
+                string userId = GetCurrentUserId();
+
+                User? user = await _userRepository.GetByIdAsync(userId, u => u.SubGroups);
+                if (user == null)
+                {
+                    return Result<IEnumerable<Course>>.Failure("User not found.");
+                }
+
+                if (user.SubGroups == null || !user.SubGroups.Any())
+                {
+                    return Result<IEnumerable<Course>>.Success(Enumerable.Empty<Course>());
+                }
+
+                var courseIds = user.SubGroups.Select(sg => sg.CourseId).Distinct().ToList();
+
+                var allCourses = await _courseRepository.GetAllAsync();
+                
+                var studentCourses = allCourses.Where(c => courseIds.Contains(c.Id)).ToList();
+
+                return Result<IEnumerable<Course>>.Success(studentCourses);
+            }
+            catch (Exception ex)
+            {
+                return Result<IEnumerable<Course>>.Failure($"An error occurred while getting student courses: {ex.Message}");
             }
         }
     }

@@ -35,6 +35,7 @@ export interface CourseAlterDto {
 })
 export class CourseService {
   private readonly baseUrl = `${environment.backendUrl}/api/${environment.apiVersion}/courses`;
+
   private readonly userBaseUrl = `${environment.backendUrl}/api/users`;
 
   constructor(private http: HttpClient) {}

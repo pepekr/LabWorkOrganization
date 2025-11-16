@@ -1,42 +1,83 @@
 <div class="course-list">
-  <h2>My Courses</h2>
+
+  <h2>My Enrollments</h2>
+
+  <div *ngIf="loadingStudent" class="loading-msg">Loading enrolled courses...</div>
+  <div *ngIf="errorStudent" class="error">{{ errorStudent }}</div>
+
+  <div *ngIf="!loadingStudent && studentCourses.length > 0">
+    <table class="course-table">
+      <thead>
+      <tr>
+        <th>Course Name</th>
+        <th>Lesson Duration</th>
+        <th>End of Course</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let course of studentCourses" (click)="navigateToCourse(course.id!)" class="course-row-student">
+        <td>{{ course.name }}</td>
+        <td>{{ course.lessonDuration }}</td>
+        <td>{{ course.endOfCourse | date:'mediumDate' }}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div *ngIf="!loadingStudent && studentCourses.length === 0 && !errorStudent">
+    <p class="no-courses-msg">You are not enrolled in any courses.</p>
+  </div>
+
+  <hr class="section-divider">
+  <h2>Course Management</h2>
 
   <button class="create-btn" (click)="openCreateCourse()">+ Create New Course</button>
 
-  <!-- Create Course Modal -->
-  <div *ngIf="showCreateCourse" class="modal">
-    <div class="modal-content">
-      <app-create-course-component (close)="closeCreateCourse($event)"></app-create-course-component>
-    </div>
+  <div *ngIf="loadingOwned" class="loading-msg">Loading owned courses...</div>
+  <div *ngIf="errorOwned" class="error">{{ errorOwned }}</div>
+
+  <div *ngIf="!loadingOwned && ownedCourses.length > 0">
+    <table class="course-table">
+      <thead>
+      <tr>
+        <th>Course Name</th>
+        <th>Lesson Duration</th>
+        <th>End of Course</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let course of ownedCourses" class="course-row-admin">
+        <td (click)="navigateToCourse(course.id!)" class="course-name-link">
+          {{ course.name }}
+        </td>
+        <td>{{ course.lessonDuration }}</td>
+        <td>{{ course.endOfCourse | date:'mediumDate' }}</td>
+        <td class="actions-cell">
+          <button class="update-btn" (click)="openUpdateCourse(course)">Update</button>
+          <button class="delete-btn" (click)="deleteCourse(course.id!, course.externalId ? true : false)">
+            Delete
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
   </div>
-
-  <!-- Update Course Modal -->
-  <div *ngIf="showUpdateCourse && selectedCourse" class="modal">
-    <div class="modal-content">
-      <app-update-course-component
-        [course]="selectedCourse"
-        (close)="closeUpdateCourse($event)">
-      </app-update-course-component>
-    </div>
+  <div *ngIf="!loadingOwned && ownedCourses.length === 0 && !errorOwned">
+    <p class="no-courses-msg">You do not own any courses.</p>
   </div>
+</div>
 
-  <div *ngIf="loading">Loading courses...</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+<div *ngIf="showCreateCourse" class="modal">
+  <div class="modal-content">
+    <app-create-course-component (close)="closeCreateCourse($event)"></app-create-course-component>
+  </div>
+</div>
 
-  <ul *ngIf="!loading && courses.length > 0">
-    <li *ngFor="let course of courses">
-
-      <h3 (click)="navigateToCourse(course.id!)" style="cursor: pointer; color: #1d7ade;">
-        {{ course.name }}
-      </h3>
-      <p>Lesson Duration: {{ course.lessonDuration }}</p>
-      <p>End of Course: {{ course.endOfCourse | date:'mediumDate' }}</p>
-      <button (click)="deleteCourse(course.id!, course.externalId ? true : false)">
-        Delete
-      </button>
-      <button (click)="openUpdateCourse(course)">Update</button>
-    </li>
-  </ul>
-
-  <div *ngIf="!loading && courses.length === 0">No courses available.</div>
+<div *ngIf="showUpdateCourse && selectedCourse" class="modal">
+  <div class="modal-content">
+    <app-update-course-component
+      [course]="selectedCourse"
+      (close)="closeUpdateCourse($event)">
+    </app-update-course-component>
+  </div>
 </div>

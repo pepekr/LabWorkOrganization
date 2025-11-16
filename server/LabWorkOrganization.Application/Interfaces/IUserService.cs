@@ -17,5 +17,7 @@ namespace LabWorkOrganization.Application.Interfaces
         Task<Result<User?>> GetUserByEmail(string email);
         Task<Result<User?>> GetUserById(string id);
         Task<Result<User>> UpdateUser(string id, User updatedUser);
+        
+        Task<Result<IEnumerable<Course>>> GetStudentCoursesAsync();
     }
 }
